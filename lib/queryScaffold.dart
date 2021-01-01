@@ -1,23 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:flux_mobile/influxDB.dart';
+import 'package:jigowatt/variablesDialog.dart';
 import 'package:rapido/rapido.dart';
 
-class QueryForm extends StatefulWidget {
+class QueryScaffold extends StatefulWidget {
   final Document document;
   final InfluxDBAPI api;
   final String activeAccountName;
   final InfluxDBVariablesList variables;
 
-  QueryForm(
+  QueryScaffold(
       {@required this.document,
       @required this.api,
       this.activeAccountName,
       @required this.variables});
   @override
-  _QueryFormState createState() => _QueryFormState();
+  _QueryScaffoldState createState() => _QueryScaffoldState();
 }
 
-class _QueryFormState extends State<QueryForm> {
+class _QueryScaffoldState extends State<QueryScaffold> {
   TextEditingController _nameController;
   TextEditingController _queryStringController;
   List<InfluxDBTable> _tables;
@@ -42,31 +43,11 @@ class _QueryFormState extends State<QueryForm> {
               onPressed: () async {
                 await showDialog(
                   context: context,
-                  builder: (_) => new SimpleDialog(
-                    children: [
-                      Container(
-                        height: 300.0,
-                        child: InfluxDBVariablesForm(
-                          variables: widget.variables,
-                        ),
-                      ),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: RaisedButton(
-                              onPressed: (() {
-                                Navigator.pop(context);
-                                setState(() {});
-                              }),
-                              child: Text("Ok"),
-                            ),
-                          ),
-                        ],
-                      )
-                    ],
-                    title: Text("Variables"),
+                  builder: (_) => VariablesDialog(
+                    variables: widget.variables,
+                    onOK: () {
+                      setState(() {});
+                    },
                   ),
                   barrierDismissible: false,
                 );
