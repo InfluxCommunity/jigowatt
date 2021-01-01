@@ -16,6 +16,10 @@ class QueryForm extends StatefulWidget {
 class _QueryFormState extends State<QueryForm> {
   TextEditingController _nameController;
   TextEditingController _queryStringController;
+  List<InfluxDBTable> _tables;
+  String _err = "";
+  QueryStatus _queryStatus = QueryStatus.None;
+
   @override
   void initState() {
     _nameController = TextEditingController(text: widget.document["name"]);
@@ -28,15 +32,45 @@ class _QueryFormState extends State<QueryForm> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+          actions: [
+            IconButton(
+              icon: Icon(Icons.settings),
+              onPressed: () {
+                print("show platform variables here");
+              },
+            )
+          ],
           title: Column(
-        children: [
-          Text("Query"),
-          Text(widget.activeAccountName,
-              style: Theme.of(context).textTheme.subtitle1),
-        ],
-      )),
+            children: [
+              Text("Query"),
+              Text(widget.activeAccountName,
+                  style: Theme.of(context).textTheme.subtitle1),
+            ],
+          )),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {},
+        onPressed: () async {
+          if (this.mounted) {
+            setState(() {
+              _queryStatus = QueryStatus.InProgress;
+            });
+          }
+          InfluxDBQuery query = InfluxDBQuery(
+            api: widget.api,
+            queryString: _queryStringController.text,
+          );
+          _tables = null;
+          _err = "";
+          try {
+            _tables = await query.execute();
+          } on InfluxDBAPIHTTPError catch (e) {
+            _err = e.readableMessage();
+          }
+          if (this.mounted) {
+            setState(() {
+              _queryStatus = QueryStatus.Complete;
+            });
+          }
+        },
         child: Icon(Icons.play_arrow),
       ),
       body: ListView(
@@ -54,6 +88,7 @@ class _QueryFormState extends State<QueryForm> {
                 controller: _nameController,
                 decoration: InputDecoration(
                   border: OutlineInputBorder(),
+                  labelText: "Quary Name",
                 ),
               ),
             ),
@@ -62,25 +97,31 @@ class _QueryFormState extends State<QueryForm> {
             padding: const EdgeInsets.all(8.0),
             child: Container(
               child: TextField(
+                style: TextStyle(fontSize: 12.0, fontFamily: "monospace"),
+                controller: _queryStringController,
                 onEditingComplete: () {
                   widget.document["queryString"] = _queryStringController.text;
                 },
+                onChanged: (String s) {
+                  widget.document["queryString"] = _queryStringController.text;
+                },
                 decoration: InputDecoration(
-                  border: OutlineInputBorder(),
-                  labelText: "Query",
-                ),
-                maxLines: 5,
+                    border: OutlineInputBorder(),
+                    labelText: "Query",
+                    labelStyle: Theme.of(context).textTheme.subtitle1),
+                maxLines: 8,
               ),
             ),
           ),
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: Container(
-              
               child: DropdownButtonFormField(
                 value: widget.document["type"],
-                decoration: InputDecoration(border: OutlineInputBorder(), labelText: "Display Style",),
-                
+                decoration: InputDecoration(
+                  border: OutlineInputBorder(),
+                  labelText: "Display Style",
+                ),
                 items: [
                   DropdownMenuItem(
                       child: Text("Line Graph"), value: "Line Graph"),
@@ -95,11 +136,55 @@ class _QueryFormState extends State<QueryForm> {
                     });
                   }
                 },
-              ), 
+              ),
             ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: resultsWidget(),
           ),
         ],
       ),
     );
   }
+
+  Widget resultsWidget() {
+    if (_queryStatus == QueryStatus.None) {
+      return Center(
+        child: Text(
+            "Type in a query, choose on output type, and click the Run button"),
+      );
+    }
+    if (_queryStatus == QueryStatus.InProgress) {
+      return Center(
+        child: CircularProgressIndicator(),
+      );
+    }
+
+    if (_err != "") {
+      return Center(
+        child: Text(_err),
+      );
+    }
+    switch (widget.document["type"]) {
+      case "Line Graph":
+        return Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Container(
+            constraints: BoxConstraints(maxHeight: 350.00),
+            child: InfluxDBLineChartWidget(
+              tables: _tables,
+              yAxis: InfluxDBLineChartAxis(tables: _tables),
+              xAxis: InfluxDBLineChartAxis(),
+            ),
+          ),
+        );
+      default:
+        return Center(
+          child: Text("something went wrong"),
+        );
+    }
+  }
 }
+
+enum QueryStatus { None, InProgress, Complete }

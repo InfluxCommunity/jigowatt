@@ -56,6 +56,7 @@ class _MyHomePageState extends State<MyHomePage> {
   InfluxDBAPI _api;
 
   String activeAccountName;
+  
   _initAccount() {
     Document activeDoc;
     influxdbInstances.forEach((Document doc) {
@@ -77,7 +78,7 @@ class _MyHomePageState extends State<MyHomePage> {
     _api = InfluxDBAPI(
       influxDBUrl: activeDoc["url"],
       org: activeDoc["org"],
-      token: activeDoc["token"],
+      token: activeDoc["token secret"],
     );
     activeAccountName = activeDoc["name"];
   }
@@ -145,6 +146,8 @@ class _MyHomePageState extends State<MyHomePage> {
                           (int index, Document doc, BuildContext context) {
                         return ListTile(
                           title: Text(doc["name"]),
+                          trailing: DocumentActionsButton(influxdbInstances,
+                              index: index),
                           leading: Switch(
                             value: doc["active?"],
                             onChanged: (bool value) {
@@ -169,6 +172,10 @@ class _MyHomePageState extends State<MyHomePage> {
                     );
                   }),
                 );
+                _initAccount();
+                setState(() {
+                  
+                });
               })
         ],
       ),
