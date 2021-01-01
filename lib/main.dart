@@ -147,6 +147,7 @@ class _MyHomePageState extends State<MyHomePage> {
               api: api,
             );
           });
+          Navigator.pop(context);
         },
         queriesSelected: () {
           setState(() {
@@ -157,6 +158,7 @@ class _MyHomePageState extends State<MyHomePage> {
               variables: variables,
             );
           });
+          Navigator.pop(context);
         },
       ),
       appBar: AppBar(

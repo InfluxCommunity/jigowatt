@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flux_mobile/influxDB.dart';
 import 'package:rapido/rapido.dart';
 
-import 'queryForm.dart';
+import 'queryScaffold.dart';
 
 class QueryListScaffold extends StatefulWidget {
   final DocumentList influxDBQueries;
@@ -48,7 +48,7 @@ class _QueryListScaffoldState extends State<QueryListScaffold> {
             MaterialPageRoute(builder: (BuildContext context) {
               widget.influxDBQueries.add(newDoc);
 
-              return QueryForm(
+              return QueryScaffold(
                 document: newDoc,
                 api: widget.api,
                 activeAccountName: widget.activeAccountName,
@@ -96,7 +96,7 @@ class QueryListItem extends StatelessWidget {
             onTap: () {
               Navigator.push(context,
                   MaterialPageRoute(builder: (BuildContext context) {
-                return QueryForm(
+                return QueryScaffold(
                   document: doc,
                   api: _api,
                   activeAccountName: activeAccountName,
