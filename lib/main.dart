@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flux_mobile/influxDB.dart';
-import 'package:jigowatt/queryForm.dart';
+import 'package:jigowatt/queryList.dart';
 import 'package:rapido/rapido.dart';
 
 void main() {
@@ -31,7 +31,12 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  // List of accounts
+  InfluxDBAPI api;
+  String activeAccountName;
+  InfluxDBVariablesList variables;
+
+  AccountReadyState _accountReadyState = AccountReadyState.None;
+
   DocumentList influxdbInstances = DocumentList(
     "account",
     labels: {
@@ -44,7 +49,7 @@ class _MyHomePageState extends State<MyHomePage> {
     persistenceProvider: SecretsPercistence(),
   );
 
-  DocumentList influxdbQueries = DocumentList(
+  DocumentList influxDBQueries = DocumentList(
     "query",
     labels: {
       "Friendly Name": "name",
@@ -53,10 +58,6 @@ class _MyHomePageState extends State<MyHomePage> {
     },
   );
 
-  InfluxDBAPI _api;
-
-  String activeAccountName;
-  
   _initAccount() {
     Document activeDoc;
     influxdbInstances.forEach((Document doc) {
@@ -70,17 +71,28 @@ class _MyHomePageState extends State<MyHomePage> {
       activeDoc = influxdbInstances[0];
     }
     if (activeDoc != null) {
-      setActiveAccount(activeDoc);
+      onActiveAccountChanged(activeDoc);
     }
   }
 
-  void setActiveAccount(Document activeDoc) {
-    _api = InfluxDBAPI(
+  void onActiveAccountChanged(Document activeDoc) {
+    api = InfluxDBAPI(
       influxDBUrl: activeDoc["url"],
       org: activeDoc["org"],
       token: activeDoc["token secret"],
     );
     activeAccountName = activeDoc["name"];
+    if (this.mounted)
+      setState(() {
+        _accountReadyState = AccountReadyState.InProgress;
+      });
+    api.variables().then((InfluxDBVariablesList vars) {
+      variables = vars;
+      if (this.mounted)
+        setState(() {
+          _accountReadyState = AccountReadyState.Ready;
+        });
+    });
   }
 
   @override
@@ -95,7 +107,7 @@ class _MyHomePageState extends State<MyHomePage> {
         }
       };
     }
-    influxdbQueries.onLoadComplete = (DocumentList list) {
+    influxDBQueries.onLoadComplete = (DocumentList list) {
       if (this.mounted) {
         setState(() {});
       }
@@ -157,7 +169,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                   d["active?"] = false;
                                 });
                                 doc["active?"] = true;
-                                setActiveAccount(doc);
+                                onActiveAccountChanged(doc);
                                 if (this.mounted) {
                                   setState(() {});
                                 }
@@ -173,93 +185,35 @@ class _MyHomePageState extends State<MyHomePage> {
                   }),
                 );
                 _initAccount();
-                setState(() {
-                  
-                });
+                setState(() {});
               })
         ],
       ),
-      body: Scaffold(
-        appBar: AppBar(
-          title: Text("Queries"),
-        ),
-        body: QueryListItem(
-            influxdbQueries: influxdbQueries,
-            api: _api,
-            activeAccountName: activeAccountName),
-        floatingActionButton: FloatingActionButton(
-          onPressed: () {
-            Document newDoc = Document(
-              initialValues: {
-                "type": "Line Graph",
-                "queryString": "",
-                "name": "Untitled Query"
-              },
-            );
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (BuildContext context) {
-                influxdbQueries.add(newDoc);
-
-                return QueryForm(
-                  document: newDoc,
-                  api: _api,
-                  activeAccountName: activeAccountName,
-                );
-              }),
-            );
-            setState(() {});
-          },
-          child: Icon(Icons.add),
-        ),
-      ),
+      body: mainBody(),
     );
+  }
+
+  Widget mainBody() {
+    if (influxdbInstances.documentsLoaded && influxdbInstances.length == 0) {
+      return Center(
+        child: Text("Use the account button to create an account"),
+      );
+    }
+    if (_accountReadyState == AccountReadyState.InProgress) {
+      return Center(
+        child: CircularProgressIndicator(),
+      );
+    }
+    if (_accountReadyState == AccountReadyState.Ready) {
+      return QueryListScaffold(
+        activeAccountName: activeAccountName,
+        api: api,
+        influxDBQueries: influxDBQueries,
+        variables: variables,
+      );
+    }
+    return Container();
   }
 }
 
-class QueryListItem extends StatelessWidget {
-  const QueryListItem({
-    Key key,
-    @required this.influxdbQueries,
-    @required InfluxDBAPI api,
-    @required this.activeAccountName,
-  })  : _api = api,
-        super(key: key);
-
-  final DocumentList influxdbQueries;
-  final InfluxDBAPI _api;
-  final String activeAccountName;
-
-  @override
-  Widget build(BuildContext context) {
-    return DocumentListView(
-      influxdbQueries,
-      customItemBuilder: (int index, Document doc, BuildContext context) {
-        return Dismissible(
-          direction: DismissDirection.startToEnd,
-          key: ObjectKey(doc.id),
-          background: ListTile(
-            tileColor: Colors.red,
-            leading: Icon(Icons.delete_forever),
-          ),
-          child: ListTile(
-            title: Text(doc["name"]),
-            onTap: () {
-              Navigator.push(context,
-                  MaterialPageRoute(builder: (BuildContext context) {
-                return QueryForm(
-                  document: doc,
-                  api: _api,
-                  activeAccountName: activeAccountName,
-                );
-              }));
-            },
-          ),
-          onDismissed: (DismissDirection dirction) {
-            influxdbQueries.remove(doc);
-          },
-        );
-      },
-    );
-  }
-}
+enum AccountReadyState { None, InProgress, Ready }

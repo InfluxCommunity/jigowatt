@@ -6,9 +6,13 @@ class QueryForm extends StatefulWidget {
   final Document document;
   final InfluxDBAPI api;
   final String activeAccountName;
+  final InfluxDBVariablesList variables;
 
   QueryForm(
-      {@required this.document, @required this.api, this.activeAccountName});
+      {@required this.document,
+      @required this.api,
+      this.activeAccountName,
+      @required this.variables});
   @override
   _QueryFormState createState() => _QueryFormState();
 }
@@ -35,8 +39,42 @@ class _QueryFormState extends State<QueryForm> {
           actions: [
             IconButton(
               icon: Icon(Icons.settings),
-              onPressed: () {
-                print("show platform variables here");
+              onPressed: () async {
+                await showDialog(
+                  context: context,
+                  builder: (_) => new SimpleDialog(
+                    children: [
+                      Container(
+                        height: 300.0,
+                        child: InfluxDBVariablesForm(
+                          variables: widget.variables,
+                          // onChanged: (InfluxDBVariablesList vars) {
+                          //   setState(() {
+                          //     widget.variables = vars;
+                          //   });
+                          // },
+                        ),
+                      ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: RaisedButton(
+                              onPressed: (() {
+                                Navigator.pop(context);
+                                setState(() {});
+                              }),
+                              child: Text("Ok"),
+                            ),
+                          ),
+                        ],
+                      )
+                    ],
+                    title: Text("Variables"),
+                  ),
+                  barrierDismissible: false,
+                );
               },
             )
           ],
@@ -57,6 +95,7 @@ class _QueryFormState extends State<QueryForm> {
           InfluxDBQuery query = InfluxDBQuery(
             api: widget.api,
             queryString: _queryStringController.text,
+            variables: widget.variables,
           );
           _tables = null;
           _err = "";
