@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flux_mobile/influxDB.dart';
+import 'package:jigowatt/dashboardScaffold.dart';
 import 'package:jigowatt/queryList.dart';
 import 'package:rapido/rapido.dart';
+
+import 'drawer.dart';
 
 void main() {
   runApp(MyApp());
@@ -34,9 +37,9 @@ class _MyHomePageState extends State<MyHomePage> {
   InfluxDBAPI api;
   String activeAccountName;
   InfluxDBVariablesList variables;
+  List<InfluxDBDashboard> dashboards;
 
   AccountReadyState _accountReadyState = AccountReadyState.None;
-
   DocumentList influxdbInstances = DocumentList(
     "account",
     labels: {
@@ -86,12 +89,25 @@ class _MyHomePageState extends State<MyHomePage> {
       setState(() {
         _accountReadyState = AccountReadyState.InProgress;
       });
+
     api.variables().then((InfluxDBVariablesList vars) {
       variables = vars;
-      if (this.mounted)
-        setState(() {
-          _accountReadyState = AccountReadyState.Ready;
-        });
+      api
+          .dashboards(variables: variables)
+          .then((List<InfluxDBDashboard> boards) {
+        dashboards = boards;
+        if (this.mounted)
+          setState(() {
+            _mainViewScaffold = QueryListScaffold(
+              activeAccountName: activeAccountName,
+              api: api,
+              influxDBQueries: influxDBQueries,
+              variables: variables,
+            );
+
+            _accountReadyState = AccountReadyState.Ready;
+          });
+      });
     });
   }
 
@@ -119,29 +135,29 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      drawer: Container(
-        width: MediaQuery.of(context).size.width * 0.85,
-        child: Scaffold(
-          body: ListView(
-            children: [
-              Container(
-                color: Theme.of(context).secondaryHeaderColor,
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Text("Jigowatt"),
-                ),
-              ),
-              Divider(),
-              ListTile(
-                title: Text("Queries"),
-                leading: Icon(Icons.query_builder),
-              ),
-              Divider(),
-              ListTile(title: Text("DASHBOARDS")),
-              Divider(),
-            ],
-          ),
-        ),
+      drawer: JigoWattDrawer(
+        activeAccountName: activeAccountName,
+        dashboards: dashboards,
+        dashboardSelected: (InfluxDBDashboard dashboard) {
+          setState(() {
+            _mainViewScaffold = DashboardScaffold(
+              key: ObjectKey(dashboard.id),
+              dashboard: dashboard,
+              activeAccountName: activeAccountName,
+              api: api,
+            );
+          });
+        },
+        queriesSelected: () {
+          setState(() {
+            _mainViewScaffold = QueryListScaffold(
+              activeAccountName: activeAccountName,
+              api: api,
+              influxDBQueries: influxDBQueries,
+              variables: variables,
+            );
+          });
+        },
       ),
       appBar: AppBar(
         title: Text("Jigowatt"),
@@ -193,6 +209,8 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
+  Widget _mainViewScaffold;
+
   Widget mainBody() {
     if (influxdbInstances.documentsLoaded && influxdbInstances.length == 0) {
       return Center(
@@ -205,12 +223,7 @@ class _MyHomePageState extends State<MyHomePage> {
       );
     }
     if (_accountReadyState == AccountReadyState.Ready) {
-      return QueryListScaffold(
-        activeAccountName: activeAccountName,
-        api: api,
-        influxDBQueries: influxDBQueries,
-        variables: variables,
-      );
+      return _mainViewScaffold;
     }
     return Container();
   }

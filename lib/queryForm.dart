@@ -48,11 +48,6 @@ class _QueryFormState extends State<QueryForm> {
                         height: 300.0,
                         child: InfluxDBVariablesForm(
                           variables: widget.variables,
-                          // onChanged: (InfluxDBVariablesList vars) {
-                          //   setState(() {
-                          //     widget.variables = vars;
-                          //   });
-                          // },
                         ),
                       ),
                       Row(
