@@ -92,7 +92,9 @@ class QueryListItem extends StatelessWidget {
             leading: Icon(Icons.delete_forever),
           ),
           child: ListTile(
+            leading: VizTypeWidget(type: doc["type"]),
             title: Text(doc["name"]),
+            subtitle: Text(doc["queryString"].split("\n")[0] + " ..."),
             onTap: () {
               Navigator.push(context,
                   MaterialPageRoute(builder: (BuildContext context) {
@@ -111,5 +113,25 @@ class QueryListItem extends StatelessWidget {
         );
       },
     );
+  }
+}
+
+class VizTypeWidget extends StatelessWidget {
+  final String type;
+
+  const VizTypeWidget({Key key, @required this.type}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    switch (type) {
+      case "Line Graph":
+        return Icon(Icons.stacked_line_chart);
+      case "Table":
+        return Icon(Icons.table_chart);
+      case "Single Stat":
+        return Icon(Icons.exposure_plus_1);
+      default:
+        return Icon(Icons.dashboard);
+    }
   }
 }
