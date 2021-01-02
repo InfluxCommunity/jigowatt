@@ -205,7 +205,16 @@ class _QueryScaffoldState extends State<QueryScaffold> {
             ),
           ),
         );
-
+      case "Single Stat":
+          return Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Container(
+            constraints: BoxConstraints(maxHeight: 350.00),
+            child: InfluxDBSingleStatWidget(
+              tables: _tables,
+            ),
+          ),
+        );
       default:
         return Center(
           child: Text("something went wrong"),
