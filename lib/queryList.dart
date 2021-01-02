@@ -26,9 +26,10 @@ class _QueryListScaffoldState extends State<QueryListScaffold> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        leading: Icon(Icons.code),
         title: Text("Queries"),
       ),
-      body: QueryListItem(
+      body: QueryListView(
         influxdbQueries: widget.influxDBQueries,
         api: widget.api,
         activeAccountName: widget.activeAccountName,
@@ -64,8 +65,8 @@ class _QueryListScaffoldState extends State<QueryListScaffold> {
   }
 }
 
-class QueryListItem extends StatelessWidget {
-  const QueryListItem({
+class QueryListView extends StatelessWidget {
+  const QueryListView({
     Key key,
     @required this.influxdbQueries,
     @required InfluxDBAPI api,
@@ -83,6 +84,13 @@ class QueryListItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return DocumentListView(
       influxdbQueries,
+      decoration: BoxDecoration(
+        image: DecorationImage(
+          image: AssetImage("assets/logo.png"),
+          colorFilter: ColorFilter.mode(
+              Colors.white.withOpacity(0.3), BlendMode.dstATop),
+        ),
+      ),
       customItemBuilder: (int index, Document doc, BuildContext context) {
         return Dismissible(
           direction: DismissDirection.startToEnd,

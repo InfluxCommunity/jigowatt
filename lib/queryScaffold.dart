@@ -37,6 +37,7 @@ class _QueryScaffoldState extends State<QueryScaffold> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: Theme.of(context).accentColor,
           actions: [
             IconButton(
               icon: Icon(Icons.settings),
@@ -206,7 +207,7 @@ class _QueryScaffoldState extends State<QueryScaffold> {
           ),
         );
       case "Single Stat":
-          return Padding(
+        return Padding(
           padding: const EdgeInsets.all(8.0),
           child: Container(
             constraints: BoxConstraints(maxHeight: 350.00),

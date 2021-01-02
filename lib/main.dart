@@ -17,7 +17,9 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
-        primarySwatch: Colors.deepPurple,
+        // primarySwatch: Colors.deepPurple,
+        primaryColor: Color.fromRGBO(34, 173, 246, 1.0),
+        accentColor: Color.fromRGBO(147, 158, 255, 1.0), 
       ),
       home: MyHomePage(title: 'Jigowatt'),
     );

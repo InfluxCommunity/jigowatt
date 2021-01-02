@@ -35,7 +35,7 @@ class JigoWattDrawer extends StatelessWidget {
     widgets.add(
       ListTile(
         title: Text("Queries"),
-        leading: Icon(Icons.query_builder),
+        leading: Icon(Icons.code),
         onTap: queriesSelected,
       ),
     );
