@@ -181,6 +181,7 @@ class _QueryScaffoldState extends State<QueryScaffold> {
         child: Text(_err),
       );
     }
+
     switch (widget.document["type"]) {
       case "Line Graph":
         return Padding(
@@ -194,6 +195,17 @@ class _QueryScaffoldState extends State<QueryScaffold> {
             ),
           ),
         );
+      case "Table":
+        return Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Container(
+            constraints: BoxConstraints(maxHeight: 350.00),
+            child: InfluxDBTableWidget(
+              tables: _tables,
+            ),
+          ),
+        );
+
       default:
         return Center(
           child: Text("something went wrong"),
