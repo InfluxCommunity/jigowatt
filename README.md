@@ -12,6 +12,8 @@ Currently, there are builds available for Android. Theoretically, builds for IOs
 ### Add an Account
 Start by clicking the "Account" button in the top left. 
 
+![fresh install](./docs/assetsfresh_install.png)
+
 This will bring you to your account list, which is empty. Click the "+" at the bottom to add your first account. Fill it in as below:
 
 | Field | Notes |
@@ -63,5 +65,4 @@ Dashboards are defined in your InfluxDB Account. Note that the real web app for 
 
 Platform Variables can be set in the same way as described above for queries. However, dashboards will automatically refresh after interacting with the variables form. Additionally, you can refresh the dashboard by pulling down on it.
 
-
-
+# Bugs and Feature Requests
