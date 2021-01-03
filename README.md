@@ -12,7 +12,7 @@ Currently, there are builds available for Android. Theoretically, builds for IOs
 ### Add an Account
 Start by clicking the "Account" button in the top left. 
 
-![fresh install](./docs/assetsfresh_install.png)
+![fresh install](docs/assets/fresh_install.png =100x)
 
 This will bring you to your account list, which is empty. Click the "+" at the bottom to add your first account. Fill it in as below:
 
