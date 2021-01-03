@@ -6,7 +6,7 @@ Currently, Jigowatt's features focus on viewing an account, including writing qu
 
 Jigowatt is powered by the Open Source toolkit [Flux Mobile](https://gitlab.com/rickspencer3/flux-mobile).
 
-Currently, there are builds available for Android. Theoretically, builds for IOs should easy to make, but the maintainer doesn't have any IOs devices for testing/building.
+Currently, there are [builds](binaries) available for Android. Theoretically, builds for IOs should easy to make, but the maintainer doesn't have any IOs devices for testing/building.
 
 ## Getting Started
 ### Add an Account
