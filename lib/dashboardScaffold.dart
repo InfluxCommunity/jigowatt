@@ -42,23 +42,7 @@ class _DashboardScaffoldState extends State<DashboardScaffold> {
                 context: context,
                 builder: (_) => VariablesDialog(
                   variables: widget.dashboard.variables,
-                  onOK: () {
-                    setState(() {
-                      _dashboard = null;
-                    });
-
-                    widget.api
-                        .dashboards(variables: widget.dashboard.variables)
-                        .then((List<InfluxDBDashboard> boards) {
-                      boards.forEach((InfluxDBDashboard board) {
-                        if (board.id == _dashboardId) {
-                          setState(() {
-                            _dashboard = board;
-                          });
-                        }
-                      });
-                    });
-                  },
+                  onOK: _refreshDashboard,
                 ),
                 barrierDismissible: false,
               );
@@ -81,11 +65,30 @@ class _DashboardScaffoldState extends State<DashboardScaffold> {
           ? Center(
               child: CircularProgressIndicator(),
             )
-          : InfluxDBDashboardCellListView(
-              dashboard: _dashboard,
+          : RefreshIndicator(
+              onRefresh: _refreshDashboard,
+              child: InfluxDBDashboardCellListView(
+                dashboard: _dashboard,
+              ),
             ),
     );
   }
+
+  Future<void>_refreshDashboard() async {
+    setState(() {
+      _dashboard = null;
+    });
+
+    widget.api
+        .dashboards(variables: widget.dashboard.variables)
+        .then((List<InfluxDBDashboard> boards) {
+      boards.forEach((InfluxDBDashboard board) {
+        if (board.id == _dashboardId) {
+          setState(() {
+            _dashboard = board;
+          });
+        }
+      });
+    });
+  }
 }
-
-

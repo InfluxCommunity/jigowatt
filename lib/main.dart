@@ -19,7 +19,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         // primarySwatch: Colors.deepPurple,
         primaryColor: Color.fromRGBO(34, 173, 246, 1.0),
-        accentColor: Color.fromRGBO(147, 158, 255, 1.0), 
+        accentColor: Color.fromRGBO(147, 158, 255, 1.0),
       ),
       home: MyHomePage(title: 'Jigowatt'),
     );
@@ -61,6 +61,7 @@ class _MyHomePageState extends State<MyHomePage> {
       "Flux": "queryString",
       "Display Type": "type",
     },
+    persistenceProvider: SecretsPercistence(),
   );
 
   _initAccount() {
