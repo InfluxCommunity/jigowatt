@@ -14,7 +14,11 @@ Start by clicking the "Account" button in the top left.
 
 ![fresh_install](docs/assets/fresh_install.png)
 
-This will bring you to your account list, which is empty. Click the "+" at the bottom to add your first account. Fill it in as below:
+This will bring you to your account list, which is empty. Click the "+" at the bottom to add your first account. 
+
+![new_account](docs/assets/new_account.png)
+
+Fill it in as below:
 
 | Field | Notes |
 |---|---|
