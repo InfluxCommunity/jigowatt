@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flux_mobile/influxDB.dart';
 import 'package:jigowatt/dashboardScaffold.dart';
-import 'package:jigowatt/queryList.dart';
+import 'package:jigowatt/queryListScaffold.dart';
+import 'package:jigowatt/taskListScaffold.dart';
 import 'package:rapido/rapido.dart';
 
 import 'drawer.dart';
@@ -40,6 +41,7 @@ class _MyHomePageState extends State<MyHomePage> {
   String activeAccountName;
   InfluxDBVariablesList variables;
   List<InfluxDBDashboard> dashboards;
+  List<InfluxDBTask> tasks;
 
   AccountReadyState _accountReadyState = AccountReadyState.None;
   DocumentList influxdbInstances = DocumentList(
@@ -81,7 +83,7 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
-  void onActiveAccountChanged(Document activeDoc) {
+  void onActiveAccountChanged(Document activeDoc) async {
     api = InfluxDBAPI(
       influxDBUrl: activeDoc["url"],
       org: activeDoc["org"],
@@ -93,24 +95,27 @@ class _MyHomePageState extends State<MyHomePage> {
         _accountReadyState = AccountReadyState.InProgress;
       });
 
-    api.variables().then((InfluxDBVariablesList vars) {
-      variables = vars;
-      api
-          .dashboards(variables: variables)
-          .then((List<InfluxDBDashboard> boards) {
-        dashboards = boards;
-        if (this.mounted)
-          setState(() {
-            _mainViewScaffold = QueryListScaffold(
-              activeAccountName: activeAccountName,
-              api: api,
-              influxDBQueries: influxDBQueries,
-              variables: variables,
-            );
+    List<dynamic> futures = await Future.wait<dynamic>([
+      api.variables(),
+      api.tasks(),
+    ]);
 
-            _accountReadyState = AccountReadyState.Ready;
-          });
-      });
+    variables = futures[0];
+    tasks = futures[1];
+
+    api.dashboards(variables: variables).then((List<InfluxDBDashboard> boards) {
+      dashboards = boards;
+      if (this.mounted)
+        setState(() {
+          _mainViewScaffold = QueryListScaffold(
+            activeAccountName: activeAccountName,
+            api: api,
+            influxDBQueries: influxDBQueries,
+            variables: variables,
+          );
+
+          _accountReadyState = AccountReadyState.Ready;
+        });
     });
   }
 
@@ -162,6 +167,14 @@ class _MyHomePageState extends State<MyHomePage> {
             );
           });
           Navigator.pop(context);
+        },
+        tasksSelected: () {
+          _mainViewScaffold = TaskListScaffold(
+            tasks: tasks,
+            activeAccountName: activeAccountName,
+          );
+          Navigator.pop(context);
+          setState(() {});
         },
       ),
       appBar: AppBar(

@@ -6,12 +6,15 @@ class JigoWattDrawer extends StatelessWidget {
   final List<InfluxDBDashboard> dashboards;
   final Function dashboardSelected;
   final Function queriesSelected;
-  
+  final Function tasksSelected;
+
   const JigoWattDrawer({
     Key key,
     @required this.activeAccountName,
     @required this.dashboards,
-    @required this.dashboardSelected, @required this.queriesSelected,
+    @required this.dashboardSelected,
+    @required this.queriesSelected,
+    @required this.tasksSelected,
   }) : super(key: key);
 
   @override
@@ -39,6 +42,17 @@ class JigoWattDrawer extends StatelessWidget {
         onTap: queriesSelected,
       ),
     );
+
+    widgets.add(Divider());
+    widgets.add(
+      ListTile(
+        title: Text("Tasks"),
+        leading: Icon(Icons.work),
+          subtitle: Text(activeAccountName),
+        onTap: tasksSelected,
+      ),
+    );
+
     if (dashboards != null) {
       widgets.add(Divider());
       widgets.add(
