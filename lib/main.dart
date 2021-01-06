@@ -5,6 +5,7 @@ import 'package:jigowatt/queryListScaffold.dart';
 import 'package:jigowatt/taskListScaffold.dart';
 import 'package:rapido/rapido.dart';
 
+import 'bucketsListScaffold.dart';
 import 'drawer.dart';
 
 void main() {
@@ -42,6 +43,7 @@ class _MyHomePageState extends State<MyHomePage> {
   InfluxDBVariablesList variables;
   List<InfluxDBDashboard> dashboards;
   List<InfluxDBTask> tasks;
+  List<InfluxDBBucket> buckets;
 
   AccountReadyState _accountReadyState = AccountReadyState.None;
   DocumentList influxdbInstances = DocumentList(
@@ -98,10 +100,12 @@ class _MyHomePageState extends State<MyHomePage> {
     List<dynamic> futures = await Future.wait<dynamic>([
       api.variables(),
       api.tasks(),
+      api.buckets(),
     ]);
 
     variables = futures[0];
     tasks = futures[1];
+    buckets = futures[2];
 
     api.dashboards(variables: variables).then((List<InfluxDBDashboard> boards) {
       dashboards = boards;
@@ -170,8 +174,18 @@ class _MyHomePageState extends State<MyHomePage> {
         },
         tasksSelected: () {
           _mainViewScaffold = TaskListScaffold(
+            api: api,
             tasks: tasks,
             activeAccountName: activeAccountName,
+          );
+          Navigator.pop(context);
+          setState(() {});
+        },
+        bucketsSelected: () {
+          _mainViewScaffold = BucketListScaffold(
+            buckets: buckets,
+            activeAccountName: activeAccountName,
+            api: api,
           );
           Navigator.pop(context);
           setState(() {});

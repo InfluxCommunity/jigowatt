@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flux_mobile/influxDB.dart';
+import 'my_flutter_app_icons.dart';
 
 class JigoWattDrawer extends StatelessWidget {
   final String activeAccountName;
@@ -7,6 +8,7 @@ class JigoWattDrawer extends StatelessWidget {
   final Function dashboardSelected;
   final Function queriesSelected;
   final Function tasksSelected;
+  final Function bucketsSelected;
 
   const JigoWattDrawer({
     Key key,
@@ -15,6 +17,7 @@ class JigoWattDrawer extends StatelessWidget {
     @required this.dashboardSelected,
     @required this.queriesSelected,
     @required this.tasksSelected,
+    @required this.bucketsSelected,
   }) : super(key: key);
 
   @override
@@ -46,9 +49,19 @@ class JigoWattDrawer extends StatelessWidget {
     widgets.add(Divider());
     widgets.add(
       ListTile(
+        title: Text("Buckets"),
+        leading: Icon(MyFlutterApp.disks_nav),
+        subtitle: Text(activeAccountName),
+        onTap: bucketsSelected,
+      ),
+    );
+
+    widgets.add(Divider());
+    widgets.add(
+      ListTile(
         title: Text("Tasks"),
         leading: Icon(Icons.work),
-          subtitle: Text(activeAccountName),
+        subtitle: Text(activeAccountName),
         onTap: tasksSelected,
       ),
     );
