@@ -37,7 +37,6 @@ class _QueryScaffoldState extends State<QueryScaffold> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Theme.of(context).accentColor,
           actions: [
             IconButton(
               icon: Icon(Icons.settings),
