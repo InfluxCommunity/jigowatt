@@ -17,6 +17,7 @@ class BucketListScaffold extends StatefulWidget {
 }
 
 class _BucketListScaffoldState extends State<BucketListScaffold> {
+  bool refreshing = false;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -30,12 +31,17 @@ class _BucketListScaffoldState extends State<BucketListScaffold> {
           ],
         ),
       ),
-      body: RefreshIndicator(
+      body: refreshing ? Center(child: CircularProgressIndicator()) : RefreshIndicator(
         onRefresh: () async {
+          refreshing = true;
           widget.buckets.forEach((InfluxDBBucket bucket) async {
-            await bucket.refresh();
+            setState(() async {
+              await bucket.refresh();
+            });
           });
-          setState(() {});
+          setState(() {
+            refreshing = false;
+          });
         },
         child: ListView.builder(
             itemCount: widget.buckets.length,
