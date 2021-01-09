@@ -4,12 +4,11 @@ import 'package:jigowatt/bucketScaffold.dart';
 import 'my_flutter_app_icons.dart';
 
 class BucketListScaffold extends StatefulWidget {
-  final List<InfluxDBBucket> buckets;
   final InfluxDBAPI api;
   final String activeAccountName;
 
   const BucketListScaffold(
-      {Key key, @required this.buckets, this.api, this.activeAccountName})
+      {Key key, @required this.api, this.activeAccountName})
       : super(key: key);
 
   @override
@@ -17,7 +16,21 @@ class BucketListScaffold extends StatefulWidget {
 }
 
 class _BucketListScaffoldState extends State<BucketListScaffold> {
-  bool refreshing = false;
+  List<InfluxDBBucket> _buckets;
+
+  @override
+  void initState() {
+    setBuckets();
+    super.initState();
+  }
+
+  Future setBuckets() async {
+    _buckets = await widget.api.buckets(onLoadComplete: () {
+      setState(() {});
+    });
+    setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -31,57 +44,53 @@ class _BucketListScaffoldState extends State<BucketListScaffold> {
           ],
         ),
       ),
-      body: refreshing ? Center(child: CircularProgressIndicator()) : RefreshIndicator(
-        onRefresh: () async {
-          refreshing = true;
-          widget.buckets.forEach((InfluxDBBucket bucket) async {
-            setState(() async {
-              await bucket.refresh();
-            });
-          });
-          setState(() {
-            refreshing = false;
-          });
-        },
-        child: ListView.builder(
-            itemCount: widget.buckets.length,
-            itemBuilder: (BuildContext builder, int index) {
-              String subtitle = "";
-              if (widget.buckets[index].mostRecentWrite == null) {
-                subtitle += "Empty";
-              } else {
-                Duration dur = DateTime.now()
-                    .difference(widget.buckets[index].mostRecentWrite);
-                String ago = "";
-                if (dur.inMinutes < 2) {
-                  ago = "Last written just now";
-                } else if (dur.inMinutes < 60) {
-                  ago = "Last written ${dur.inMinutes.toString()} minutes ago";
-                } else if (dur.inHours < 24) {
-                  ago = "Last written ${dur.inHours} hours ago";
-                } else {
-                  ago = "Last written ${dur.inDays} days ago";
-                }
-                subtitle = ago;
-              }
-              return ListTile(
-                title: Text(widget.buckets[index].name),
-                subtitle: Text(subtitle),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (BuildContext context) {
-                      return BucketScaffold(
-                        bucket: widget.buckets[index],
-                        api: widget.api,
-                        activeAccountName: widget.activeAccountName,
-                      );
-                    }),
-                  );
-                },
-              );
-            }),
-      ),
+      body: _buckets == null
+          ? Center(child: CircularProgressIndicator())
+          : RefreshIndicator(
+              onRefresh: () async {
+                await setBuckets();
+                return;
+              },
+              child: ListView.builder(
+                  itemCount: _buckets.length,
+                  itemBuilder: (BuildContext builder, int index) {
+                    String subtitle = "";
+                    if (_buckets[index].mostRecentWrite == null) {
+                      subtitle += "Empty";
+                    } else {
+                      Duration dur = DateTime.now()
+                          .difference(_buckets[index].mostRecentWrite);
+                      String ago = "";
+                      if (dur.inMinutes < 2) {
+                        ago = "Last written just now";
+                      } else if (dur.inMinutes < 60) {
+                        ago =
+                            "Last written ${dur.inMinutes.toString()} minutes ago";
+                      } else if (dur.inHours < 24) {
+                        ago = "Last written ${dur.inHours} hours ago";
+                      } else {
+                        ago = "Last written ${dur.inDays} days ago";
+                      }
+                      subtitle = ago;
+                    }
+                    return ListTile(
+                      title: Text(_buckets[index].name),
+                      subtitle: Text(subtitle),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (BuildContext context) {
+                            return BucketScaffold(
+                              bucket: _buckets[index],
+                              api: widget.api,
+                              activeAccountName: widget.activeAccountName,
+                            );
+                          }),
+                        );
+                      },
+                    );
+                  }),
+            ),
     );
   }
 }
