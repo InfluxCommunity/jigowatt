@@ -67,57 +67,100 @@ class _BucketScaffoldState extends State<BucketScaffold> {
     if (widget.bucket.mostRecentWrite != null) {
       widgets.add(MeasurementsWidget(api: widget.api, bucket: widget.bucket));
     }
-    if (widget.bucket.mostRecentRecord != null) {
-      widget.bucket.mostRecentRecord.keys.remove("_time");
-      widget.bucket.mostRecentRecord.rows[0].remove("_time");
+    if (widget.bucket.mostRecentRecords != null) {
+      widgets.add(
+        ListTile(
+          title: Text(
+              "Series in bucket: ${widget.bucket.mostRecentRecords.length}"),
+        ),
+      );
+    }
+    if (widget.bucket.mostRecentRecords != null &&
+        widget.bucket.mostRecentRecords.length > 0) {
       widgets.add(
         Divider(),
       );
-      widgets.add(Container(
-        child: Column(
+      widgets.add(
+        Column(
           children: [
-            Text(
-              "Most Recent Record Written",
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.headline6,
-            ),
-            Text(
-              widget.bucket.mostRecentWrite.toLocal().toString(),
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.caption,
-            ),
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Table(
-                children: widget.bucket.mostRecentRecord.keys.map((String key) {
-                  return TableRow(
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Text(
-                          key,
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
+            Text("Last Write by Series"),
+            Container(
+              margin: EdgeInsets.symmetric(vertical: 20.0),
+              height: 300.0,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                itemCount: widget.bucket.mostRecentRecords.length,
+                itemBuilder: (BuildContext context, int index) {
+                  return Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Container(
+                      height: 300.0,
+                      width: 300.0,
+                      child: Card(
+                        child: SingleChildScrollView(
+                          child: DataTable(
+                            dataRowHeight: 100.0,
+                            columnSpacing: 10.0,
+                            columns: [
+                              DataColumn(
+                                label: Text("Key"),
+                              ),
+                              DataColumn(label: Text("Value")),
+                            ],
+                            rows: widget.bucket.mostRecentRecords[index].keys
+                                .map((String key) {
+                              return DataRow(
+                                cells: [
+                                  DataCell(
+                                    Text(key),
+                                  ),
+                                  DataCell(
+                                    Container(
+                                      width: 130.0,
+                                      child: Flexible(
+                                        child: Text(
+                                          widget.bucket.mostRecentRecords[index]
+                                                      .rows.length ==
+                                                  0
+                                              ? "No Data"
+                                              : widget
+                                                  .bucket
+                                                  .mostRecentRecords[index]
+                                                  .rows[0][key]
+                                                  .toString(),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              );
+                            }).toList(),
                           ),
-                          textAlign: TextAlign.right,
                         ),
                       ),
-                      Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Text(widget.bucket.mostRecentRecord.rows[0][key]
-                            .toString()),
-                      ),
-                    ],
+                    ),
                   );
-                }).toList(),
+                },
               ),
             ),
           ],
         ),
-      ));
+      );
     }
 
     return widgets;
+  }
+}
+
+class SeriesViewer extends StatefulWidget {
+  _SeriesViewerState createState() => _SeriesViewerState();
+}
+
+class _SeriesViewerState extends State<SeriesViewer> {
+  @override
+  Widget build(BuildContext context) {
+    // TODO: implement build
+    throw UnimplementedError();
   }
 }
 
