@@ -45,23 +45,30 @@ class _BucketScaffoldState extends State<BucketScaffold> {
 
   List<Widget> buildChildren() {
     List<Widget> widgets = [];
-    if (widget.bucket.hasRetentionPolicy) {
-      widgets.add(
-        ListTile(
-          title:
-              Text("Retention: ${widget.bucket.retentionSeconds / 86400} days"),
-        ),
-      );
-    } else {
-      widgets.add(
-        ListTile(
-          title: Text("Retention: Forever"),
-        ),
-      );
-    }
+
     widgets.add(
       ListTile(
-        title: Text("Total Cardinality: ${widget.bucket.cardinality}"),
+        title: Text(widget.bucket.hasRetentionPolicy
+            ? "${widget.bucket.retentionSeconds / 86400} days"
+            : "Forever"),
+        subtitle: Text("Retention"),
+      ),
+    );
+
+    widgets.add(
+      ListTile(
+        title: Text(
+          widget.bucket.mostRecentWrite == null
+              ? "None"
+              : widget.bucket.mostRecentWrite.toLocal().toString(),
+        ),
+        subtitle: Text("Most Recent Write"),
+      ),
+    );
+    widgets.add(
+      ListTile(
+        title: Text(widget.bucket.cardinality.toString()),
+        subtitle: Text("Total Cardinality"),
       ),
     );
     if (widget.bucket.mostRecentWrite != null) {
@@ -152,18 +159,6 @@ class _BucketScaffoldState extends State<BucketScaffold> {
   }
 }
 
-class SeriesViewer extends StatefulWidget {
-  _SeriesViewerState createState() => _SeriesViewerState();
-}
-
-class _SeriesViewerState extends State<SeriesViewer> {
-  @override
-  Widget build(BuildContext context) {
-    // TODO: implement build
-    throw UnimplementedError();
-  }
-}
-
 class MeasurementsWidget extends StatefulWidget {
   final InfluxDBAPI api;
   final InfluxDBBucket bucket;
@@ -220,26 +215,33 @@ schema.measurements(bucket: \"${widget.bucket.name}\")
                   Text(
                     "Cardinality By Measurement",
                     textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.headline6,
                   ),
-                  Table(
-                    children: _table.rows.map((InfluxDBRow row) {
-                      return TableRow(
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Text(row["measurement"],
-                                textAlign: TextAlign.right,
-                                style: TextStyle(fontWeight: FontWeight.bold)),
+                  DataTable(
+                    columns: [
+                      DataColumn(
+                        label: Text("Measurement"),
+                      ),
+                      DataColumn(
+                        label: Text(
+                          "Cardinality",
+                        ),
+                      ),
+                    ],
+                    rows: _table.rows.map((InfluxDBRow row) {
+                      return DataRow(cells: [
+                        DataCell(
+                          Text(
+                            row["measurement"],
                           ),
-                          Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Text(row["cardinality"].toString()),
+                        ),
+                        DataCell(
+                          Text(
+                            row["cardinality"].toString(),
                           ),
-                        ],
-                      );
+                        ),
+                      ]);
                     }).toList(),
-                  ),
+                  )
                 ],
               ),
             ),
