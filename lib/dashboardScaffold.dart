@@ -27,6 +27,9 @@ class _DashboardScaffoldState extends State<DashboardScaffold> {
   void initState() {
     _dashboard = widget.dashboard;
     _dashboardId = _dashboard.id;
+    _dashboard.onCellsUpdated = (() {
+      setState(() {});
+    });
     super.initState();
   }
 
@@ -43,6 +46,7 @@ class _DashboardScaffoldState extends State<DashboardScaffold> {
                 builder: (_) => VariablesDialog(
                   variables: widget.dashboard.variables,
                   onOK: _refreshDashboard,
+                  referencedVariables: widget.dashboard.referencedVariableNames,
                 ),
                 barrierDismissible: false,
               );
@@ -74,7 +78,7 @@ class _DashboardScaffoldState extends State<DashboardScaffold> {
     );
   }
 
-  Future<void>_refreshDashboard() async {
+  Future<void> _refreshDashboard() async {
     setState(() {
       _dashboard = null;
     });

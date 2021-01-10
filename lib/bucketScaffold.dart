@@ -20,6 +20,14 @@ class BucketScaffold extends StatefulWidget {
 
 class _BucketScaffoldState extends State<BucketScaffold> {
   @override
+  void initState() {
+    widget.bucket.onLoadComplete = () {
+      setState(() {});
+    };
+    super.initState();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -120,22 +128,21 @@ class _BucketScaffoldState extends State<BucketScaffold> {
                                 cells: [
                                   DataCell(
                                     Text(key),
+                                    
                                   ),
                                   DataCell(
                                     Container(
                                       width: 130.0,
-                                      child: Flexible(
-                                        child: Text(
-                                          widget.bucket.mostRecentRecords[index]
-                                                      .rows.length ==
-                                                  0
-                                              ? "No Data"
-                                              : widget
-                                                  .bucket
-                                                  .mostRecentRecords[index]
-                                                  .rows[0][key]
-                                                  .toString(),
-                                        ),
+                                      child: Text(
+                                        widget.bucket.mostRecentRecords[index]
+                                                    .rows.length ==
+                                                0
+                                            ? "No Data"
+                                            : widget
+                                                .bucket
+                                                .mostRecentRecords[index]
+                                                .rows[0][key]
+                                                .toString(),
                                       ),
                                     ),
                                   ),
@@ -179,7 +186,7 @@ import "influxdata/influxdb"
 import "influxdata/influxdb/schema"
 
 
-schema.measurements(bucket: \"${widget.bucket.name}\")
+schema.tagValues(bucket: \"${widget.bucket.name}\", tag: "_measurement", start: -100y)
   |> map(fn: (r) => {
       m = r._value
       return {

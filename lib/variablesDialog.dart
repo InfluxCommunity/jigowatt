@@ -4,8 +4,9 @@ import 'package:flux_mobile/influxDB.dart';
 class VariablesDialog extends StatelessWidget {
   final Function onOK;
   final InfluxDBVariablesList variables;
+  final List<String> referencedVariables;
 
-  const VariablesDialog({Key key, this.onOK, @required this.variables})
+  const VariablesDialog({Key key, this.onOK, @required this.variables, this.referencedVariables})
       : super(key: key);
 
   @override
@@ -16,6 +17,7 @@ class VariablesDialog extends StatelessWidget {
           height: 300.0,
           child: InfluxDBVariablesForm(
             variables: variables,
+            referencedVariables: referencedVariables,
           ),
         ),
         Row(
