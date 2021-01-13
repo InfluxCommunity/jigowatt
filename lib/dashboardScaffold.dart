@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flux_mobile/influxDB.dart';
@@ -25,6 +27,12 @@ class _DashboardScaffoldState extends State<DashboardScaffold> {
   String _dashboardId;
   @override
   void initState() {
+
+    // Decided against automatically refreshing dashboards
+    // but can just uncomment this to enable it
+    // Timer.periodic(Duration(minutes: 1), (time) {
+    //   _refreshDashboard();
+    // });
     _dashboard = widget.dashboard;
     _dashboardId = _dashboard.id;
     _dashboard.onCellsUpdated = (() {
@@ -90,6 +98,9 @@ class _DashboardScaffoldState extends State<DashboardScaffold> {
         if (board.id == _dashboardId) {
           setState(() {
             _dashboard = board;
+            _dashboard.onCellsUpdated = () {
+              setState(() {});
+            };
           });
         }
       });

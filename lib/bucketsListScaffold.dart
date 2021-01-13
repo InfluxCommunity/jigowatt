@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flux_mobile/influxDB.dart';
 import 'package:jigowatt/bucketScaffold.dart';
@@ -20,6 +22,9 @@ class _BucketListScaffoldState extends State<BucketListScaffold> {
 
   @override
   void initState() {
+    Timer.periodic(Duration(minutes: 1), (timer) { 
+      setBuckets();
+    });
     setBuckets();
     super.initState();
   }

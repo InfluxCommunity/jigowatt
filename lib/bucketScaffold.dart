@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flux_mobile/influxDB.dart';
@@ -128,7 +130,6 @@ class _BucketScaffoldState extends State<BucketScaffold> {
                                 cells: [
                                   DataCell(
                                     Text(key),
-                                    
                                   ),
                                   DataCell(
                                     Container(
@@ -181,6 +182,11 @@ class _MeasurementsWidgetState extends State<MeasurementsWidget> {
 
   @override
   void initState() {
+    Timer.periodic(Duration(minutes: 1), (timer) {
+      widget.bucket.refresh().then((value) {
+        setState(() {});
+      });
+    });
     String flux = """
 import "influxdata/influxdb"
 import "influxdata/influxdb/schema"

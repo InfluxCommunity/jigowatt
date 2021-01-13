@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flux_mobile/influxDB.dart';
 import 'package:intl/intl.dart';
@@ -23,6 +25,9 @@ class _NotificationScaffoldState extends State<NotificationScaffold> {
 
   @override
   void initState() {
+    Timer.periodic(Duration(minutes: 1), (timer) {
+      _notification.refresh();
+    });
     _notification = widget.notification;
     _notification.onLoadComplete = () {
       setState(() {});
