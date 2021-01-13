@@ -24,6 +24,9 @@ class _NotificationScaffoldState extends State<NotificationScaffold> {
   @override
   void initState() {
     _notification = widget.notification;
+    _notification.onLoadComplete = () {
+      setState(() {});
+    };
     super.initState();
   }
 
@@ -62,16 +65,14 @@ class _NotificationScaffoldState extends State<NotificationScaffold> {
       );
     }
     widgets.add(
-      ListTile(
-        title: Text(_notification.active ? "Active" : "Inactive"),
-        trailing: Switch(
-            value: _notification.active,
-            onChanged: (bool val) {
-              setState(() {
-                _notification.active = val;
-              });
-            }),
-      ),
+      SwitchListTile(
+          title: Text(_notification.active ? "Active" : "Inactive"),
+          value: _notification.active,
+          onChanged: (bool newVal) {
+            _notification.setEnabled(enabled: newVal).then((bool returnedVal) {
+              setState(() {});
+            });
+          }),
     );
     widgets.add(_lastRunTile());
 
