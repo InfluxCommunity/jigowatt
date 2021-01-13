@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flux_mobile/influxDB.dart';
 import 'my_flutter_app_icons.dart';
@@ -35,6 +37,10 @@ class _JigoWattDrawerState extends State<JigoWattDrawer> {
 
   @override
   void initState() {
+    Timer.periodic(Duration(minutes: 1), (Timer t) {
+      _setEntities();
+    });
+
     _setEntities();
     super.initState();
   }
