@@ -44,6 +44,7 @@ class _TaskScaffoldState extends State<TaskScaffold> {
 
     return Scaffold(
       appBar: AppBar(
+        leading: Icon(Icons.work),
         title: Column(
           children: [
             Text(widget.task.name),

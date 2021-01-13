@@ -7,6 +7,7 @@ import 'package:rapido/rapido.dart';
 
 import 'bucketsListScaffold.dart';
 import 'drawer.dart';
+import 'notificationScaffold.dart';
 
 void main() {
   runApp(MyApp());
@@ -43,6 +44,7 @@ class _MyHomePageState extends State<MyHomePage> {
   InfluxDBVariablesList variables;
   List<InfluxDBDashboard> dashboards;
   List<InfluxDBTask> tasks;
+  List<InfluxDBNotification> notifications;
 
   AccountReadyState _accountReadyState = AccountReadyState.None;
   DocumentList influxdbInstances = DocumentList(
@@ -99,10 +101,12 @@ class _MyHomePageState extends State<MyHomePage> {
     List<dynamic> futures = await Future.wait<dynamic>([
       api.variables(),
       api.tasks(),
+      api.notifications(),
     ]);
 
     variables = futures[0];
     tasks = futures[1];
+    notifications = futures[2];
 
     api.dashboards(variables: variables).then((List<InfluxDBDashboard> boards) {
       dashboards = boards;
@@ -147,6 +151,18 @@ class _MyHomePageState extends State<MyHomePage> {
       drawer: JigoWattDrawer(
         activeAccountName: activeAccountName,
         dashboards: dashboards,
+        notifications: notifications,
+        notificationSelected: (InfluxDBNotification notification) {
+          setState(() {
+            _mainViewScaffold = NotificationScaffold(
+              key: ObjectKey(notification.id),
+              notification: notification,
+              activeAccountName: activeAccountName,
+              api: api,
+            );
+          });
+          Navigator.pop(context);
+        },
         dashboardSelected: (InfluxDBDashboard dashboard) {
           setState(() {
             _mainViewScaffold = DashboardScaffold(
