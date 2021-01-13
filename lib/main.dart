@@ -42,9 +42,6 @@ class _MyHomePageState extends State<MyHomePage> {
   InfluxDBAPI api;
   String activeAccountName;
   InfluxDBVariablesList variables;
-  List<InfluxDBDashboard> dashboards;
-  List<InfluxDBTask> tasks;
-  List<InfluxDBNotification> notifications;
 
   AccountReadyState _accountReadyState = AccountReadyState.None;
   DocumentList influxdbInstances = DocumentList(
@@ -100,28 +97,19 @@ class _MyHomePageState extends State<MyHomePage> {
 
     List<dynamic> futures = await Future.wait<dynamic>([
       api.variables(),
-      api.tasks(),
-      api.notifications(),
     ]);
 
     variables = futures[0];
-    tasks = futures[1];
-    notifications = futures[2];
 
-    api.dashboards(variables: variables).then((List<InfluxDBDashboard> boards) {
-      dashboards = boards;
-      if (this.mounted)
-        setState(() {
-          _mainViewScaffold = QueryListScaffold(
-            activeAccountName: activeAccountName,
-            api: api,
-            influxDBQueries: influxDBQueries,
-            variables: variables,
-          );
+    _mainViewScaffold = QueryListScaffold(
+      activeAccountName: activeAccountName,
+      api: api,
+      influxDBQueries: influxDBQueries,
+      variables: variables,
+    );
 
-          _accountReadyState = AccountReadyState.Ready;
-        });
-    });
+    _accountReadyState = AccountReadyState.Ready;
+    setState(() {});
   }
 
   @override
@@ -150,8 +138,6 @@ class _MyHomePageState extends State<MyHomePage> {
     return Scaffold(
       drawer: JigoWattDrawer(
         activeAccountName: activeAccountName,
-        dashboards: dashboards,
-        notifications: notifications,
         notificationSelected: (InfluxDBNotification notification) {
           setState(() {
             _mainViewScaffold = NotificationScaffold(
@@ -185,7 +171,7 @@ class _MyHomePageState extends State<MyHomePage> {
           });
           Navigator.pop(context);
         },
-        tasksSelected: () {
+        tasksSelected: (List<InfluxDBTask> tasks) {
           _mainViewScaffold = TaskListScaffold(
             api: api,
             tasks: tasks,
@@ -202,6 +188,8 @@ class _MyHomePageState extends State<MyHomePage> {
           Navigator.pop(context);
           setState(() {});
         },
+        api: api,
+        variables: variables,
       ),
       appBar: AppBar(
         title: Text("Jigowatt"),
