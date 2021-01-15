@@ -152,7 +152,7 @@ class _NotificationScaffoldState extends State<NotificationScaffold> {
 
     _notification.recentStatuses.forEach((InfluxDBTable table) {
       if (levels[status.rows[0]["_level"]] > curLevel) {
-        curLevel = status.rows[0]["_level"];
+        curLevel = levels[status.rows[0]["_level"]];
       }
     });
     Icon leadingIcon = Icon(Icons.check, color: Colors.green);
