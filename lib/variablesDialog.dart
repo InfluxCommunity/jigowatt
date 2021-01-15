@@ -15,6 +15,7 @@ class VariablesDialog extends StatelessWidget {
       children: [
         Container(
           height: 300.0,
+          width: 200.0,
           child: InfluxDBVariablesForm(
             variables: variables,
             referencedVariables: referencedVariables,
