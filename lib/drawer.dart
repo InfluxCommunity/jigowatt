@@ -136,8 +136,8 @@ class _JigoWattDrawerState extends State<JigoWattDrawer> {
           int curLevel = 0;
 
           notification.recentStatuses.forEach((InfluxDBTable table) {
-            if (levels[table.rows[0]["_level"]] > curLevel) {
-              curLevel = table.rows[0]["_level"];
+            if (table.rows.length > 0 && levels[table.rows[0]["_level"]] > curLevel) {
+              curLevel = levels[table.rows[0]["_level"]];
             }
           });
           Icon leadingIcon = Icon(Icons.check, color: Colors.green);
