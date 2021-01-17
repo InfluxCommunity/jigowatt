@@ -246,7 +246,7 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget mainBody() {
     if (influxdbInstances.documentsLoaded && influxdbInstances.length == 0) {
       return Center(
-        child: Text("Use the account button to create an account"),
+        child: Text("Use the account button to add an account"),
       );
     }
     if (_accountReadyState == AccountReadyState.InProgress) {
