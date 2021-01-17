@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flux_mobile/influxDB.dart';
+import 'package:jigowatt/accountListScaffold.dart';
+import 'package:jigowatt/accountScaffold.dart';
 import 'package:jigowatt/dashboardScaffold.dart';
 import 'package:jigowatt/queryListScaffold.dart';
 import 'package:jigowatt/taskListScaffold.dart';
@@ -44,10 +46,9 @@ class _MyHomePageState extends State<MyHomePage> {
   InfluxDBVariablesList variables;
 
   AccountReadyState _accountReadyState = AccountReadyState.None;
-  DocumentList influxdbInstances = DocumentList(
+  DocumentList accountDocs = DocumentList(
     "account",
     labels: {
-      "active": "active?",
       "Friendly Name": "name",
       "Org Id": "org",
       "URL": "url",
@@ -68,15 +69,21 @@ class _MyHomePageState extends State<MyHomePage> {
 
   _initAccount() {
     Document activeDoc;
-    influxdbInstances.forEach((Document doc) {
+    accountDocs.forEach((Document doc) {
+      // ensure there is only one active document
       if (doc["active?"]) {
-        activeDoc = doc;
-        return;
+        if (activeDoc == null) {
+          activeDoc = doc;
+        } else {
+          doc["active?"] = false;
+        }
       }
     });
-    if (activeDoc == null && influxdbInstances.length > 0) {
-      influxdbInstances[0]["active"] = true;
-      activeDoc = influxdbInstances[0];
+
+    // ensure there is at least one active document
+    if (activeDoc == null && accountDocs.length > 0) {
+      accountDocs[0]["active"] = true;
+      activeDoc = accountDocs[0];
     }
     if (activeDoc != null) {
       onActiveAccountChanged(activeDoc);
@@ -95,29 +102,53 @@ class _MyHomePageState extends State<MyHomePage> {
         _accountReadyState = AccountReadyState.InProgress;
       });
 
-    List<dynamic> futures = await Future.wait<dynamic>([
-      api.variables(),
-    ]);
+    try {
+      List<dynamic> futures = await Future.wait<dynamic>([
+        api.variables(),
+      ]);
 
-    variables = futures[0];
+      variables = futures[0];
 
-    _mainViewScaffold = QueryListScaffold(
-      activeAccountName: activeAccountName,
-      api: api,
-      influxDBQueries: influxDBQueries,
-      variables: variables,
-    );
-
+      _mainViewScaffold = QueryListScaffold(
+        activeAccountName: activeAccountName,
+        api: api,
+        influxDBQueries: influxDBQueries,
+        variables: variables,
+      );
+    } catch (e) {
+      _mainViewScaffold = Scaffold(
+        body: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Center(
+                  child: Text(
+                    "Unable to load account \"${activeDoc["name"]}\" due to the following error:",
+                    style: TextStyle(color: Colors.red),
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Center(child: Text(e.toString()),),
+              )
+            ],
+          ),
+        ),
+      );
+    }
     _accountReadyState = AccountReadyState.Ready;
     setState(() {});
   }
 
   @override
   void initState() {
-    if (influxdbInstances.documentsLoaded) {
+    if (accountDocs.documentsLoaded) {
       _initAccount();
     } else {
-      influxdbInstances.onLoadComplete = (DocumentList list) {
+      accountDocs.onLoadComplete = (DocumentList list) {
         _initAccount();
         if (this.mounted) {
           setState(() {});
@@ -196,39 +227,15 @@ class _MyHomePageState extends State<MyHomePage> {
         actions: [
           IconButton(
               icon: Icon(Icons.account_circle_rounded),
-              onPressed: () {
-                Navigator.push(
+              onPressed: () async {
+                await Navigator.push(
                   context,
                   MaterialPageRoute(builder: (BuildContext context) {
-                    return DocumentListScaffold(
-                      influxdbInstances,
-                      customItemBuilder:
-                          (int index, Document doc, BuildContext context) {
-                        return ListTile(
-                          title: Text(doc["name"]),
-                          trailing: DocumentActionsButton(influxdbInstances,
-                              index: index),
-                          leading: Switch(
-                            value: doc["active?"],
-                            onChanged: (bool value) {
-                              if (doc["active?"] && value) return;
-                              if (value) {
-                                influxdbInstances.forEach((Document d) {
-                                  d["active?"] = false;
-                                });
-                                doc["active?"] = true;
-                                onActiveAccountChanged(doc);
-                                if (this.mounted) {
-                                  setState(() {});
-                                }
-                              }
-                            },
-                          ),
-                        );
+                    return AccountListScaffold(
+                      accountDocs: accountDocs,
+                      onActiveAccountChanged: (Document activeAccountDoc) {
+                        onActiveAccountChanged(activeAccountDoc);
                       },
-                      emptyListWidget: Center(
-                        child: Text("Use + to start adding accounts"),
-                      ),
                     );
                   }),
                 );
@@ -244,9 +251,14 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget _mainViewScaffold;
 
   Widget mainBody() {
-    if (influxdbInstances.documentsLoaded && influxdbInstances.length == 0) {
+    if (accountDocs.documentsLoaded && accountDocs.length == 0) {
       return Center(
-        child: Text("Use the account button to add an account"),
+        child: FirstRunWidget(
+          accountDocs: accountDocs,
+          onActiveAccountChanged: (Document newAccount) {
+            onActiveAccountChanged(newAccount);
+          },
+        ),
       );
     }
     if (_accountReadyState == AccountReadyState.InProgress) {
@@ -258,6 +270,76 @@ class _MyHomePageState extends State<MyHomePage> {
       return _mainViewScaffold;
     }
     return Container();
+  }
+}
+
+class FirstRunWidget extends StatelessWidget {
+  final Function onActiveAccountChanged;
+  final DocumentList accountDocs;
+
+  const FirstRunWidget({
+    Key key,
+    @required this.onActiveAccountChanged,
+    @required this.accountDocs,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(24.0),
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Text(
+              "Welcome to Jigowatt",
+              style: Theme.of(context).textTheme.headline4,
+              textAlign: TextAlign.center,
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Text(
+              "Jigowatt is an Open Source Client for InfluxDB 2.0, and requires at least one InfluxDB account. To get started, click the button below to add an existing InfluxDB account.",
+              textAlign: TextAlign.center,
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: RaisedButton(
+              onPressed: () async {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (BuildContext context) {
+                      return AccountScaffold(
+                        onOK: (Document newAccount) {
+                          accountDocs.add(newAccount);
+                          onActiveAccountChanged(newAccount);
+                        },
+                      );
+                    },
+                  ),
+                );
+              },
+              color: Theme.of(context).colorScheme.primary,
+              child: Icon(
+                Icons.person_add,
+                size: 75.0,
+                // color: Theme.of(context).colorScheme.primary,
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Text(
+              "You will need your Org ID, the URL for your account, and an all access token.",
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 
