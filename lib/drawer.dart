@@ -122,7 +122,7 @@ class _JigoWattDrawerState extends State<JigoWattDrawer> {
       widgets.add(Divider());
       widgets.add(
         ListTile(
-          title: Text("NOTIFICATIONS"),
+          title: Text("NOTIFICATION RULES"),
           leading: Icon(Icons.notifications),
           subtitle: Text(widget.activeAccountName),
         ),

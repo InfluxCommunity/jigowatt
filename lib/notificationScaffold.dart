@@ -81,6 +81,7 @@ class _NotificationScaffoldState extends State<NotificationScaffold> {
             });
           }),
     );
+
     widgets.add(_lastRunTile());
 
     if (_notificationRule.errorString != null) {
@@ -94,98 +95,52 @@ class _NotificationScaffoldState extends State<NotificationScaffold> {
       );
     }
     widgets.add(Divider());
-    if (_notificationRule.recentStatuses.length > 0) {
-      widgets.add(
-        ListTile(
-            title: Text(
-              _notificationRule.recentNotifications.last.time
-                  .toLocal()
-                  .toString(),
-            ),
-            subtitle: Text("Most Recent Notification"),
-            leading: Icon(Icons.notifications)),
-      );
-    } else {
-      widgets.add(ListTile(
-          title: Text(
-            "No Recent Notifications",
-          ),
-          leading: Icon(Icons.notifications_off)));
-    }
+
+    widgets.add(
+      Column(children: [
+        Text("Notifications, Last 24h"),
+        _notificationRule.recentNotifications == null ||
+                _notificationRule.recentNotifications.length == 0
+            ? Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.notifications_off),
+                    Text("None"),
+                  ],
+                ),
+              )
+            : NotificationsDataTable(
+                notifications: _notificationRule.recentNotifications,
+              )
+      ]),
+    );
+
     widgets.add(Divider());
     widgets.add(
       Column(
         children: [
-          Text("Most Recent Checks"),
-          Container(
-            height: 300.0,
-            child: _notificationRule.recentStatuses.length < 1
-                ? Center(
-                    child: Text("No check statuses in last 24 hours"),
-                  )
-                : SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: SingleChildScrollView(
-                      child: DataTable(
-                        columns: [
-                          DataColumn(
-                            label: Text("Status"),
-                          ),
-                          DataColumn(
-                            label: Text("Time"),
-                          ),
-                          DataColumn(
-                            label: Text("Message"),
-                          )
-                        ],
-                        rows: _notificationRule.recentStatuses
-                            .map((InfluxDBCheckStatus status) {
-                          return _getCheckDataRow(status);
-                        }).toList(),
-                      ),
-                    ),
+          Text("Most Recent Check Statuses, Last 24h"),
+          _notificationRule.recentStatuses == null ||
+                  _notificationRule.recentStatuses.length == 0
+              ? Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.notifications_off),
+                      Text("None"),
+                    ],
                   ),
-          ),
+                )
+              : NotificationsDataTable(
+                  notifications: _notificationRule.recentStatuses,
+                ),
         ],
       ),
     );
     return widgets;
-  }
-
-  DataRow _getCheckDataRow(InfluxDBCheckStatus status) {
-    Icon leadingIcon = Icon(Icons.check, color: Colors.green);
-    switch (status.level) {
-      case 1:
-        leadingIcon = Icon(
-          Icons.info,
-          color: Colors.blue,
-        );
-        break;
-      case 2:
-        leadingIcon = Icon(
-          Icons.warning,
-          color: Colors.yellow,
-        );
-        break;
-      case 3:
-        leadingIcon = Icon(Icons.warning, color: Colors.red);
-        break;
-    }
-    return DataRow(cells: [
-      DataCell(
-        leadingIcon,
-      ),
-      DataCell(
-        Text(
-          DateFormat("jm").format(
-            status.time.toLocal(),
-          ),
-        ),
-      ),
-      DataCell(Text(
-        status.message,
-      ))
-    ]);
   }
 
   ListTile _lastRunTile() {
@@ -220,3 +175,92 @@ class _NotificationScaffoldState extends State<NotificationScaffold> {
         leading: statusIcon);
   }
 }
+
+class NotificationsDataTable extends StatelessWidget {
+  final List<InfluxDBCheckStatus> notifications;
+
+  const NotificationsDataTable({Key key, @required this.notifications})
+      : super(key: key);
+  @override
+  Widget build(BuildContext context) {
+    List<String> keys = ["Status", "Time", "Message"];
+   
+    
+    notifications.forEach((notification) {
+      notification.additionalInfo.keys.forEach((String key) {
+        if (!keys.contains(key)) keys.add(key);
+      });
+    });
+
+    return Container(
+      height: 250.0,
+      child: SingleChildScrollView(
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: DataTable(
+            columns: keys.map((String key) {
+              return DataColumn(
+                label: Text(key),
+              );
+            }).toList(),
+            rows: notifications.map((notification) {
+              return DataRow(
+                cells: keys.map((String key) {
+                  switch (key) {
+                    case "Status":
+                      return DataCell(LevelIcons[notification.level]);
+                    case "Time":
+                      return DataCell(
+                        Container(
+                          width: 60.0,
+                          child: Column(
+                            children: [
+                              Text(
+                                "${DateFormat("E").format(
+                                  notification.time.toLocal(),
+                                )}",
+                              ),
+                              Text(
+                                "${DateFormat("jm").format(
+                                  notification.time.toLocal(),
+                                )}",
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    case "Message":
+                      return DataCell(
+                        Text(
+                          notification.message,
+                        ),
+                      );
+                    default:
+                      return DataCell(
+                        Text(
+                          notification.additionalInfo[key],
+                        ),
+                      );
+                  }
+                }).toList(),
+              );
+            }).toList(),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+const LevelIcons = {
+  0: Icon(Icons.check, color: Colors.green),
+  1: Icon(
+    Icons.info,
+    color: Colors.blue,
+  ),
+  2: Icon(
+    Icons.warning,
+    color: Colors.yellow,
+  ),
+  3: Icon(Icons.warning, color: Colors.red),
+};
