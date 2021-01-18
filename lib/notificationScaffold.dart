@@ -212,7 +212,7 @@ class NotificationsDataTable extends StatelessWidget {
                     case "Time":
                       return DataCell(
                         Container(
-                          width: 60.0,
+                          width: 80.0,
                           child: Column(
                             children: [
                               Text(

@@ -11,6 +11,8 @@ import 'bucketsListScaffold.dart';
 import 'drawer.dart';
 import 'notificationScaffold.dart';
 
+import 'package:permission_handler/permission_handler.dart';
+
 void main() {
   runApp(MyApp());
 }
@@ -132,7 +134,9 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
               Padding(
                 padding: const EdgeInsets.all(8.0),
-                child: Center(child: Text(e.toString()),),
+                child: Center(
+                  child: Text(e.toString()),
+                ),
               )
             ],
           ),
@@ -145,6 +149,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   void initState() {
+    _checkPermissions();
     if (accountDocs.documentsLoaded) {
       _initAccount();
     } else {
@@ -162,6 +167,14 @@ class _MyHomePageState extends State<MyHomePage> {
     };
 
     super.initState();
+  }
+
+  _checkPermissions() async {
+    PermissionStatus status = await Permission.storage.status;
+    if (status.isUndetermined) {
+      await Permission.storage.request();
+    }
+    setState(() {});
   }
 
   @override
@@ -337,6 +350,10 @@ class FirstRunWidget extends StatelessWidget {
               textAlign: TextAlign.center,
             ),
           ),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Text("Jigowatt also requires permssions to access your device's storage to securely store your account information."),
+          )
         ],
       ),
     );
