@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:jigowatt/accountScaffold.dart';
-import 'package:jigowatt/main.dart';
 import 'package:rapido/rapido.dart';
 
 class AccountListScaffold extends StatefulWidget {
@@ -35,7 +34,6 @@ class _AccountListScaffoldState extends State<AccountListScaffold> {
                 });
 
                 widget.accountDocs.add(newDoc);
-                
                 setState(() {});
               },
             );

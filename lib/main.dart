@@ -169,11 +169,11 @@ class _MyHomePageState extends State<MyHomePage> {
     return Scaffold(
       drawer: JigoWattDrawer(
         activeAccountName: activeAccountName,
-        notificationSelected: (InfluxDBNotification notification) {
+        notificationSelected: (InfluxDBNotificationRule notificationRule) {
           setState(() {
             _mainViewScaffold = NotificationScaffold(
-              key: ObjectKey(notification.id),
-              notification: notification,
+              key: ObjectKey(notificationRule.id),
+              notificationRule: notificationRule,
               activeAccountName: activeAccountName,
               api: api,
             );

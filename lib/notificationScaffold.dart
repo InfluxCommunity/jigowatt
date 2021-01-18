@@ -5,13 +5,13 @@ import 'package:flux_mobile/influxDB.dart';
 import 'package:intl/intl.dart';
 
 class NotificationScaffold extends StatefulWidget {
-  final InfluxDBNotification notification;
+  final InfluxDBNotificationRule notificationRule;
   final String activeAccountName;
   final InfluxDBAPI api;
 
   const NotificationScaffold(
       {Key key,
-      @required this.notification,
+      @required this.notificationRule,
       @required this.activeAccountName,
       @required this.api})
       : super(key: key);
@@ -21,15 +21,15 @@ class NotificationScaffold extends StatefulWidget {
 }
 
 class _NotificationScaffoldState extends State<NotificationScaffold> {
-  InfluxDBNotification _notification;
+  InfluxDBNotificationRule _notificationRule;
 
   @override
   void initState() {
     Timer.periodic(Duration(minutes: 1), (timer) {
-      _notification.refresh();
+      _notificationRule.refresh();
     });
-    _notification = widget.notification;
-    _notification.onLoadComplete = () {
+    _notificationRule = widget.notificationRule;
+    _notificationRule.onLoadComplete = () {
       setState(() {});
     };
     super.initState();
@@ -42,7 +42,7 @@ class _NotificationScaffoldState extends State<NotificationScaffold> {
         leading: Icon(Icons.notifications),
         title: Column(
           children: [
-            Text(_notification.name),
+            Text(_notificationRule.name),
             Text(widget.activeAccountName,
                 style: Theme.of(context).textTheme.subtitle1),
           ],
@@ -50,7 +50,7 @@ class _NotificationScaffoldState extends State<NotificationScaffold> {
       ),
       body: RefreshIndicator(
           onRefresh: () async {
-            _notification.refresh().then((value) {
+            _notificationRule.refresh().then((value) {
               setState(() {});
             });
           },
@@ -60,44 +60,45 @@ class _NotificationScaffoldState extends State<NotificationScaffold> {
 
   List<Widget> _buildChildren() {
     List<Widget> widgets = [];
-    if (_notification.description != null) {
+    if (_notificationRule.description != null) {
       widgets.add(
         ListTile(
           title: (Text(
-            _notification.description,
+            _notificationRule.description,
           )),
         ),
       );
     }
     widgets.add(
       SwitchListTile(
-          title: Text(_notification.active ? "Active" : "Inactive"),
-          value: _notification.active,
+          title: Text(_notificationRule.active ? "Active" : "Inactive"),
+          value: _notificationRule.active,
           onChanged: (bool newVal) {
-            _notification.setEnabled(enabled: newVal).then((bool returnedVal) {
+            _notificationRule
+                .setEnabled(enabled: newVal)
+                .then((bool returnedVal) {
               setState(() {});
             });
           }),
     );
     widgets.add(_lastRunTile());
 
-    if (_notification.errorString != null) {
+    if (_notificationRule.errorString != null) {
       widgets.add(
         ListTile(
           title: Text(
-            _notification.errorString,
+            _notificationRule.errorString,
             style: TextStyle(color: Colors.red),
           ),
         ),
       );
     }
     widgets.add(Divider());
-    if (_notification.mostRecentNotification.rows.length > 0) {
+    if (_notificationRule.recentStatuses.length > 0) {
       widgets.add(
         ListTile(
             title: Text(
-              DateTime.parse(
-                      _notification.mostRecentNotification.rows[0]["_time"])
+              _notificationRule.recentNotifications.last.time
                   .toLocal()
                   .toString(),
             ),
@@ -118,27 +119,32 @@ class _NotificationScaffoldState extends State<NotificationScaffold> {
           Text("Most Recent Checks"),
           Container(
             height: 300.0,
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: SingleChildScrollView(
-                child: DataTable(
-                  columns: [
-                    DataColumn(
-                      label: Text("Status"),
+            child: _notificationRule.recentStatuses.length < 1
+                ? Center(
+                    child: Text("No check statuses in last 24 hours"),
+                  )
+                : SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: SingleChildScrollView(
+                      child: DataTable(
+                        columns: [
+                          DataColumn(
+                            label: Text("Status"),
+                          ),
+                          DataColumn(
+                            label: Text("Time"),
+                          ),
+                          DataColumn(
+                            label: Text("Message"),
+                          )
+                        ],
+                        rows: _notificationRule.recentStatuses
+                            .map((InfluxDBCheckStatus status) {
+                          return _getCheckDataRow(status);
+                        }).toList(),
+                      ),
                     ),
-                    DataColumn(
-                      label: Text("Time"),
-                    ),
-                    DataColumn(
-                      label: Text("Message"),
-                    )
-                  ],
-                  rows: _notification.recentStatuses.map((InfluxDBTable table) {
-                    return _getCheckDataRow(table);
-                  }).toList(),
-                ),
-              ),
-            ),
+                  ),
           ),
         ],
       ),
@@ -146,17 +152,9 @@ class _NotificationScaffoldState extends State<NotificationScaffold> {
     return widgets;
   }
 
-  DataRow _getCheckDataRow(InfluxDBTable status) {
-    Map<String, int> levels = {"ok": 0, "info": 1, "warn": 2, "crit": 3};
-    int curLevel = 0;
-
-    _notification.recentStatuses.forEach((InfluxDBTable table) {
-      if (levels[status.rows[0]["_level"]] > curLevel) {
-        curLevel = levels[status.rows[0]["_level"]];
-      }
-    });
+  DataRow _getCheckDataRow(InfluxDBCheckStatus status) {
     Icon leadingIcon = Icon(Icons.check, color: Colors.green);
-    switch (curLevel) {
+    switch (status.level) {
       case 1:
         leadingIcon = Icon(
           Icons.info,
@@ -179,20 +177,21 @@ class _NotificationScaffoldState extends State<NotificationScaffold> {
       ),
       DataCell(
         Text(
-          DateFormat("jm")
-              .format(DateTime.parse(status.rows[0]["_time"]).toLocal()),
+          DateFormat("jm").format(
+            status.time.toLocal(),
+          ),
         ),
       ),
-      DataCell(
-        Text(status.rows[0]["_value"]),
-      )
+      DataCell(Text(
+        status.message,
+      ))
     ]);
   }
 
   ListTile _lastRunTile() {
     Icon statusIcon;
     String statusString = "";
-    switch (_notification.lastRunSucceeded) {
+    switch (_notificationRule.lastRunSucceeded) {
       case TaskSuccess.Canceled:
         statusIcon = Icon(
           Icons.cancel,
@@ -216,7 +215,7 @@ class _NotificationScaffoldState extends State<NotificationScaffold> {
         break;
     }
     return ListTile(
-        title: Text(_notification.latestCompleted.toLocal().toString()),
+        title: Text(_notificationRule.latestCompleted.toLocal().toString()),
         subtitle: Text(statusString),
         leading: statusIcon);
   }

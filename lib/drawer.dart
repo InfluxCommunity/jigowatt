@@ -33,7 +33,7 @@ class JigoWattDrawer extends StatefulWidget {
 class _JigoWattDrawerState extends State<JigoWattDrawer> {
   List<InfluxDBDashboard> dashboards;
   List<InfluxDBTask> tasks;
-  List<InfluxDBNotification> notifications;
+  List<InfluxDBNotificationRule> notificationRules;
 
   @override
   void initState() {
@@ -53,11 +53,11 @@ class _JigoWattDrawerState extends State<JigoWattDrawer> {
     ]);
 
     tasks = futures[0];
-    notifications = futures[1];
+    notificationRules = futures[1];
     dashboards = futures[2];
 
-    notifications.forEach((InfluxDBNotification notification) {
-      notification.onLoadComplete = () {
+    notificationRules.forEach((InfluxDBNotificationRule notificationRule) {
+      notificationRule.onLoadComplete = () {
         setState(() {});
       };
     });
@@ -118,7 +118,7 @@ class _JigoWattDrawerState extends State<JigoWattDrawer> {
       ),
     );
 
-    if (notifications != null && notifications.length > 0) {
+    if (notificationRules != null && notificationRules.length > 0) {
       widgets.add(Divider());
       widgets.add(
         ListTile(
@@ -127,17 +127,16 @@ class _JigoWattDrawerState extends State<JigoWattDrawer> {
           subtitle: Text(widget.activeAccountName),
         ),
       );
-      notifications.forEach((InfluxDBNotification notification) {
-        notification.onLoadComplete = () {
+      notificationRules.forEach((InfluxDBNotificationRule notificationRule) {
+        notificationRule.onLoadComplete = () {
           setState(() {});
         };
-        if (notification.recentStatuses != null) {
-          Map<String, int> levels = {"ok": 0, "info": 1, "warn": 2, "crit": 3};
+        if (notificationRule.recentStatuses != null) {
           int curLevel = 0;
 
-          notification.recentStatuses.forEach((InfluxDBTable table) {
-            if (table.rows.length > 0 && levels[table.rows[0]["_level"]] > curLevel) {
-              curLevel = levels[table.rows[0]["_level"]];
+          notificationRule.recentStatuses.forEach((InfluxDBCheckStatus status) {
+            if (status.level > curLevel) {
+              curLevel = status.level;
             }
           });
           Icon leadingIcon = Icon(Icons.check, color: Colors.green);
@@ -161,10 +160,10 @@ class _JigoWattDrawerState extends State<JigoWattDrawer> {
 
           widgets.add(ListTile(
             leading: leadingIcon,
-            title: Text(notification.name),
-            subtitle: Text(notification.active ? "Active" : "Inactive"),
+            title: Text(notificationRule.name),
+            subtitle: Text(notificationRule.active ? "Active" : "Inactive"),
             onTap: () {
-              widget.notificationSelected(notification);
+              widget.notificationSelected(notificationRule);
             },
           ));
         }
