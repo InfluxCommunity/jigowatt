@@ -34,10 +34,11 @@ class _JigoWattDrawerState extends State<JigoWattDrawer> {
   List<InfluxDBDashboard> dashboards;
   List<InfluxDBTask> tasks;
   List<InfluxDBNotificationRule> notificationRules;
+  Timer _timer;
 
   @override
   void initState() {
-    Timer.periodic(Duration(minutes: 1), (Timer t) {
+    _timer = Timer.periodic(Duration(minutes: 1), (Timer t) {
       _setEntities();
     });
 
@@ -190,5 +191,14 @@ class _JigoWattDrawerState extends State<JigoWattDrawer> {
       });
     }
     return widgets;
+  }
+
+  @override
+  void dispose() {
+    notificationRules.forEach((InfluxDBNotificationRule rule) { 
+      rule.onLoadComplete = null;
+    });
+    _timer.cancel();
+    super.dispose();
   }
 }

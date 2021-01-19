@@ -26,13 +26,17 @@ class _NotificationScaffoldState extends State<NotificationScaffold> {
   @override
   void initState() {
     Timer.periodic(Duration(minutes: 1), (timer) {
+      _notificationRule.onLoadComplete = _onLoadComplete;
       _notificationRule.refresh();
     });
+    
+    widget.notificationRule.onLoadComplete = _onLoadComplete;
     _notificationRule = widget.notificationRule;
-    _notificationRule.onLoadComplete = () {
-      setState(() {});
-    };
     super.initState();
+  }
+
+  _onLoadComplete() {
+    setState(() {});
   }
 
   @override
@@ -50,6 +54,7 @@ class _NotificationScaffoldState extends State<NotificationScaffold> {
       ),
       body: RefreshIndicator(
           onRefresh: () async {
+            _notificationRule.onLoadComplete = _onLoadComplete;
             _notificationRule.refresh().then((value) {
               setState(() {});
             });
@@ -97,48 +102,12 @@ class _NotificationScaffoldState extends State<NotificationScaffold> {
     widgets.add(Divider());
 
     widgets.add(
-      Column(children: [
-        Text("Notifications, Last 24h"),
-        _notificationRule.recentNotifications == null ||
-                _notificationRule.recentNotifications.length == 0
-            ? Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.notifications_off),
-                    Text("None"),
-                  ],
-                ),
-              )
-            : NotificationsDataTable(
-                notifications: _notificationRule.recentNotifications,
-              )
-      ]),
+      RecentNotificationsWidget(notificationRule: _notificationRule),
     );
 
     widgets.add(Divider());
     widgets.add(
-      Column(
-        children: [
-          Text("Most Recent Check Statuses, Last 24h"),
-          _notificationRule.recentStatuses == null ||
-                  _notificationRule.recentStatuses.length == 0
-              ? Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.notifications_off),
-                      Text("None"),
-                    ],
-                  ),
-                )
-              : NotificationsDataTable(
-                  notifications: _notificationRule.recentStatuses,
-                ),
-        ],
-      ),
+      RecentChecksWidget(notificationRule: _notificationRule),
     );
     return widgets;
   }
@@ -173,6 +142,70 @@ class _NotificationScaffoldState extends State<NotificationScaffold> {
         title: Text(_notificationRule.latestCompleted.toLocal().toString()),
         subtitle: Text(statusString),
         leading: statusIcon);
+  }
+}
+
+class RecentNotificationsWidget extends StatelessWidget {
+  const RecentNotificationsWidget({
+    Key key,
+    @required InfluxDBNotificationRule notificationRule,
+  }) : _notificationRule = notificationRule, super(key: key);
+
+  final InfluxDBNotificationRule _notificationRule;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(children: [
+      Text("Notifications, Last 24h"),
+      _notificationRule.recentNotifications == null ||
+              _notificationRule.recentNotifications.length == 0
+          ? Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.notifications_off),
+                  Text("None"),
+                ],
+              ),
+            )
+          : NotificationsDataTable(
+              notifications: _notificationRule.recentNotifications,
+            )
+    ]);
+  }
+}
+
+class RecentChecksWidget extends StatelessWidget {
+  const RecentChecksWidget({
+    Key key,
+    @required InfluxDBNotificationRule notificationRule,
+  }) : _notificationRule = notificationRule, super(key: key);
+
+  final InfluxDBNotificationRule _notificationRule;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Text("Most Recent Check Statuses, Last 24h"),
+        _notificationRule.recentStatuses == null ||
+                _notificationRule.recentStatuses.length == 0
+            ? Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.notifications_off),
+                    Text("None"),
+                  ],
+                ),
+              )
+            : NotificationsDataTable(
+                notifications: _notificationRule.recentStatuses,
+              ),
+      ],
+    );
   }
 }
 
