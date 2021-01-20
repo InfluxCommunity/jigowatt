@@ -29,7 +29,7 @@ class _NotificationScaffoldState extends State<NotificationScaffold> {
       _notificationRule.onLoadComplete = _onLoadComplete;
       _notificationRule.refresh();
     });
-    
+
     widget.notificationRule.onLoadComplete = _onLoadComplete;
     _notificationRule = widget.notificationRule;
     super.initState();
@@ -146,19 +146,19 @@ class _NotificationScaffoldState extends State<NotificationScaffold> {
 }
 
 class RecentNotificationsWidget extends StatelessWidget {
+  final InfluxDBNotificationRule notificationRule;
+
   const RecentNotificationsWidget({
     Key key,
-    @required InfluxDBNotificationRule notificationRule,
-  }) : _notificationRule = notificationRule, super(key: key);
-
-  final InfluxDBNotificationRule _notificationRule;
+    @required this.notificationRule,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Column(children: [
       Text("Notifications, Last 24h"),
-      _notificationRule.recentNotifications == null ||
-              _notificationRule.recentNotifications.length == 0
+      notificationRule.recentNotifications == null ||
+              notificationRule.recentNotifications.length == 0
           ? Padding(
               padding: const EdgeInsets.all(8.0),
               child: Row(
@@ -169,28 +169,51 @@ class RecentNotificationsWidget extends StatelessWidget {
                 ],
               ),
             )
-          : NotificationsDataTable(
-              notifications: _notificationRule.recentNotifications,
+          : RecentsTable(
+              keys: _getKeys(),
+              rows: _getRows(),
             )
     ]);
+  }
+
+  List<String> _getKeys() {
+    List<String> keys = ["Status", "Time", "End Point", "Message"];
+    keys.addAll(notificationRule.recentNotifications[0].additionalInfo.keys);
+    return keys;
+  }
+
+  List<Map<String, dynamic>> _getRows() {
+    List<Map<String, dynamic>> rows = [];
+    notificationRule.recentNotifications
+        .forEach((InfluxDBNotification notification) {
+      Map<String, dynamic> row = {
+        "Status": notification.level,
+        "Time": notification.time,
+        "End Point": notification.notificationEndPoint,
+        "Message": notification.message,
+      };
+      row.addAll(notification.additionalInfo);
+      rows.add(row);
+    });
+    return rows;
   }
 }
 
 class RecentChecksWidget extends StatelessWidget {
+  final InfluxDBNotificationRule notificationRule;
+
   const RecentChecksWidget({
     Key key,
-    @required InfluxDBNotificationRule notificationRule,
-  }) : _notificationRule = notificationRule, super(key: key);
-
-  final InfluxDBNotificationRule _notificationRule;
+    @required this.notificationRule,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
         Text("Most Recent Check Statuses, Last 24h"),
-        _notificationRule.recentStatuses == null ||
-                _notificationRule.recentStatuses.length == 0
+        notificationRule.recentStatuses == null ||
+                notificationRule.recentStatuses.length == 0
             ? Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: Row(
@@ -201,30 +224,41 @@ class RecentChecksWidget extends StatelessWidget {
                   ],
                 ),
               )
-            : NotificationsDataTable(
-                notifications: _notificationRule.recentStatuses,
-              ),
+            : RecentsTable(keys: _getKeys(), rows: _getRows()),
       ],
     );
   }
+
+  List<String> _getKeys() {
+    List<String> keys = ["Status", "Time", "Message"];
+    keys.addAll(notificationRule.recentStatuses[0].additionalInfo.keys);
+    return keys;
+  }
+
+  List<Map<String, dynamic>> _getRows() {
+    List<Map<String, dynamic>> rows = [];
+    notificationRule.recentStatuses
+        .forEach((InfluxDBCheckStatus status) {
+      Map<String, dynamic> row = {
+        "Status": status.level,
+        "Time": status.time,
+        "Message": status.message,
+      };
+      row.addAll(status.additionalInfo);
+      rows.add(row);
+    });
+    return rows;
+  }
 }
 
-class NotificationsDataTable extends StatelessWidget {
-  final List<InfluxDBCheckStatus> notifications;
+class RecentsTable extends StatelessWidget {
+  final List<String> keys;
+  final List<Map<String, dynamic>> rows;
 
-  const NotificationsDataTable({Key key, @required this.notifications})
+  const RecentsTable({Key key, @required this.keys, @required this.rows})
       : super(key: key);
   @override
   Widget build(BuildContext context) {
-    List<String> keys = ["Status", "Time", "Message"];
-   
-    
-    notifications.forEach((notification) {
-      notification.additionalInfo.keys.forEach((String key) {
-        if (!keys.contains(key)) keys.add(key);
-      });
-    });
-
     return Container(
       height: 250.0,
       child: SingleChildScrollView(
@@ -236,12 +270,12 @@ class NotificationsDataTable extends StatelessWidget {
                 label: Text(key),
               );
             }).toList(),
-            rows: notifications.map((notification) {
+            rows: rows.map((Map<String, dynamic> row) {
               return DataRow(
                 cells: keys.map((String key) {
                   switch (key) {
                     case "Status":
-                      return DataCell(LevelIcons[notification.level]);
+                      return DataCell(LevelIcons[row["Status"]]);
                     case "Time":
                       return DataCell(
                         Container(
@@ -250,28 +284,22 @@ class NotificationsDataTable extends StatelessWidget {
                             children: [
                               Text(
                                 "${DateFormat("E").format(
-                                  notification.time.toLocal(),
+                                  row["Time"].toLocal(),
                                 )}",
                               ),
                               Text(
                                 "${DateFormat("jm").format(
-                                  notification.time.toLocal(),
+                                  row["Time"].toLocal(),
                                 )}",
                               ),
                             ],
                           ),
                         ),
                       );
-                    case "Message":
-                      return DataCell(
-                        Text(
-                          notification.message,
-                        ),
-                      );
                     default:
                       return DataCell(
                         Text(
-                          notification.additionalInfo[key],
+                          row[key].toString(),
                         ),
                       );
                   }
