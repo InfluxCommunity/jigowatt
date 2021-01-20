@@ -179,10 +179,11 @@ class MeasurementsWidget extends StatefulWidget {
 
 class _MeasurementsWidgetState extends State<MeasurementsWidget> {
   InfluxDBTable _table;
+  Timer _timer;
 
   @override
   void initState() {
-    Timer.periodic(Duration(minutes: 1), (timer) {
+    _timer = Timer.periodic(Duration(minutes: 1), (timer) {
       widget.bucket.refresh().then((value) {
         setState(() {});
       });
@@ -212,6 +213,12 @@ schema.tagValues(bucket: \"${widget.bucket.name}\", tag: "_measurement", start: 
       });
     });
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    _timer.cancel();
+    super.dispose();
   }
 
   @override

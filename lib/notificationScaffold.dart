@@ -22,10 +22,11 @@ class NotificationScaffold extends StatefulWidget {
 
 class _NotificationScaffoldState extends State<NotificationScaffold> {
   InfluxDBNotificationRule _notificationRule;
+  Timer _timer;
 
   @override
   void initState() {
-    Timer.periodic(Duration(minutes: 1), (timer) {
+    _timer = Timer.periodic(Duration(minutes: 1), (timer) {
       _notificationRule.onLoadComplete = _onLoadComplete;
       _notificationRule.refresh();
     });
@@ -37,6 +38,12 @@ class _NotificationScaffoldState extends State<NotificationScaffold> {
 
   _onLoadComplete() {
     setState(() {});
+  }
+
+  @override
+  void dispose() {
+    _timer.cancel();
+    super.dispose();
   }
 
   @override

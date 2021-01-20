@@ -19,10 +19,11 @@ class BucketListScaffold extends StatefulWidget {
 
 class _BucketListScaffoldState extends State<BucketListScaffold> {
   List<InfluxDBBucket> _buckets;
+  Timer _timer;
 
   @override
   void initState() {
-    Timer.periodic(Duration(minutes: 1), (timer) { 
+    _timer = Timer.periodic(Duration(minutes: 1), (timer) { 
       setBuckets();
     });
     setBuckets();
@@ -34,6 +35,12 @@ class _BucketListScaffoldState extends State<BucketListScaffold> {
       setState(() {});
     });
     setState(() {});
+  }
+
+  @override
+  void dispose() {
+    _timer.cancel();
+    super.dispose();
   }
 
   @override
