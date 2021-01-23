@@ -195,7 +195,7 @@ class _JigoWattDrawerState extends State<JigoWattDrawer> {
 
   @override
   void dispose() {
-    notificationRules.forEach((InfluxDBNotificationRule rule) { 
+    notificationRules.forEach((InfluxDBNotificationRule rule) {
       rule.onLoadComplete = null;
     });
     _timer.cancel();

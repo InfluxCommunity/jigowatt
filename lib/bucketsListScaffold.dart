@@ -3,14 +3,16 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flux_mobile/influxDB.dart';
 import 'package:jigowatt/bucketScaffold.dart';
+import 'package:jigowatt/legacyBucketScaffold.dart';
 import 'my_flutter_app_icons.dart';
 
 class BucketListScaffold extends StatefulWidget {
   final InfluxDBAPI api;
   final String activeAccountName;
+  final bool legacyMode;
 
   const BucketListScaffold(
-      {Key key, @required this.api, this.activeAccountName})
+      {Key key, @required this.api, this.activeAccountName, this.legacyMode})
       : super(key: key);
 
   @override
@@ -20,10 +22,14 @@ class BucketListScaffold extends StatefulWidget {
 class _BucketListScaffoldState extends State<BucketListScaffold> {
   List<InfluxDBBucket> _buckets;
   Timer _timer;
+  bool _legacyMode;
 
   @override
   void initState() {
-    _timer = Timer.periodic(Duration(minutes: 1), (timer) { 
+    widget.legacyMode == null || widget.legacyMode == false
+        ? _legacyMode = false
+        : _legacyMode = true;
+    _timer = Timer.periodic(Duration(minutes: 1), (timer) {
       setBuckets();
     });
     setBuckets();
@@ -31,9 +37,11 @@ class _BucketListScaffoldState extends State<BucketListScaffold> {
   }
 
   Future setBuckets() async {
-    _buckets = await widget.api.buckets(onLoadComplete: () {
-      setState(() {});
-    });
+    _buckets = await widget.api.buckets(
+        includeExtendedProperties: !_legacyMode,
+        onLoadComplete: () {
+          setState(() {});
+        });
     setState(() {});
   }
 
@@ -68,7 +76,7 @@ class _BucketListScaffoldState extends State<BucketListScaffold> {
                   itemBuilder: (BuildContext builder, int index) {
                     String subtitle = "";
                     if (_buckets[index].mostRecentWrite == null) {
-                      subtitle += "Empty";
+                      if (!_legacyMode) subtitle += "Empty";
                     } else {
                       Duration dur = DateTime.now()
                           .difference(_buckets[index].mostRecentWrite);
@@ -92,11 +100,17 @@ class _BucketListScaffoldState extends State<BucketListScaffold> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(builder: (BuildContext context) {
-                            return BucketScaffold(
-                              bucket: _buckets[index],
-                              api: widget.api,
-                              activeAccountName: widget.activeAccountName,
-                            );
+                            return _legacyMode
+                                ? LegacyBucketScaffold(
+                                    bucket: _buckets[index],
+                                    api: widget.api,
+                                    activeAccountName: widget.activeAccountName,
+                                  )
+                                : BucketScaffold(
+                                    bucket: _buckets[index],
+                                    api: widget.api,
+                                    activeAccountName: widget.activeAccountName,
+                                  );
                           }),
                         );
                       },

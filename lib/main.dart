@@ -12,6 +12,7 @@ import 'drawer.dart';
 import 'notificationScaffold.dart';
 
 import 'package:permission_handler/permission_handler.dart';
+import 'package:version/version.dart';
 
 void main() {
   runApp(MyApp());
@@ -46,6 +47,7 @@ class _MyHomePageState extends State<MyHomePage> {
   InfluxDBAPI api;
   String activeAccountName;
   InfluxDBVariablesList variables;
+  Version fluxVersion;
 
   AccountReadyState _accountReadyState = AccountReadyState.None;
   DocumentList accountDocs = DocumentList(
@@ -107,9 +109,11 @@ class _MyHomePageState extends State<MyHomePage> {
     try {
       List<dynamic> futures = await Future.wait<dynamic>([
         api.variables(),
+        api.fluxVersion(),
       ]);
 
       variables = futures[0];
+      fluxVersion = futures[1];
 
       _mainViewScaffold = QueryListScaffold(
         activeAccountName: activeAccountName,
@@ -226,6 +230,7 @@ class _MyHomePageState extends State<MyHomePage> {
         },
         bucketsSelected: () {
           _mainViewScaffold = BucketListScaffold(
+            legacyMode: (fluxVersion.major < 1 && fluxVersion.minor < 100),
             activeAccountName: activeAccountName,
             api: api,
           );
@@ -352,7 +357,8 @@ class FirstRunWidget extends StatelessWidget {
           ),
           Padding(
             padding: const EdgeInsets.all(8.0),
-            child: Text("Jigowatt also requires permssions to access your device's storage to securely store your account information."),
+            child: Text(
+                "Jigowatt also requires permssions to access your device's storage to securely store your account information."),
           )
         ],
       ),
