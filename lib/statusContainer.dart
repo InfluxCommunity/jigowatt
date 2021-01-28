@@ -17,6 +17,7 @@ class _StatusContainerState extends State<StatusContainer> {
   List<InfluxDBCheckStatus> _statuses;
   bool _sortAscending = true;
   int _sortColumn = 0;
+  List<String> _extraKeys = [];
 
   @override
   void initState() {
@@ -25,9 +26,18 @@ class _StatusContainerState extends State<StatusContainer> {
   }
 
   void _setStatus() {
-    widget.api.status(lastOnly: true).then((value) {
+    widget.api
+        .status(lastOnly: true)
+        .then((List<InfluxDBCheckStatus> statuses) {
       setState(() {
-        _statuses = value;
+        statuses.forEach((InfluxDBCheckStatus status) {
+          status.additionalInfo.keys.forEach((String key) {
+            if (!_extraKeys.contains(key)) {
+              _extraKeys.add(key);
+            }
+          });
+        });
+        _statuses = statuses;
       });
     });
   }
@@ -129,6 +139,29 @@ class _StatusContainerState extends State<StatusContainer> {
         },
       ),
     ]);
+    for (int i = 0; i < _extraKeys.length; i++) {
+      String key = _extraKeys[i];
+      cols.add(
+        DataColumn(
+          label: Text(key),
+          onSort: (columnIndex, ascending) {
+            if (columnIndex == i + 3) {
+              _statuses.sort((a, b) {
+                if (ascending) {
+                  return a.message.compareTo(b.message);
+                } else {
+                  return b.message.compareTo(a.message);
+                }
+              });
+            }
+            setState(() {
+              _sortAscending = !_sortAscending;
+              _sortColumn = columnIndex;
+            });
+          },
+        ),
+      );
+    }
     return cols;
   }
 
@@ -161,105 +194,18 @@ class _StatusContainerState extends State<StatusContainer> {
           Text(status.message),
         ),
       );
+      cells.addAll(_extraKeys.map((String key) {
+        return DataCell(
+          Text(status.additionalInfo[key] == null
+              ? ""
+              : status.additionalInfo[key]),
+        );
+      }));
       rows.add(
         DataRow(cells: cells),
       );
     });
     return rows;
-  }
-
-  List<String> _getKeys() {
-    List<String> keys = ["Status", "Time", "Message"];
-    _statuses.forEach((InfluxDBCheckStatus status) {
-      status.additionalInfo.forEach((key, value) {
-        if (!keys.contains(key)) {
-          keys.add(key);
-        }
-      });
-    });
-    return keys;
-  }
-
-  List<Map<String, dynamic>> _getRows() {
-    List<Map<String, dynamic>> rows = [];
-    _statuses.forEach((InfluxDBCheckStatus status) {
-      Map<String, dynamic> row = {
-        "Status": status.level,
-        "Time": status.time,
-        "Message": status.message,
-      };
-      row.addAll(status.additionalInfo);
-      rows.add(row);
-    });
-    return rows;
-  }
-}
-
-class RecentsTable extends StatelessWidget {
-  final List<String> keys;
-  final List<Map<String, dynamic>> rows;
-
-  const RecentsTable({Key key, @required this.keys, @required this.rows})
-      : super(key: key);
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: Container(
-        child: SingleChildScrollView(
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: DataTable(
-              columns: keys.map((String key) {
-                return DataColumn(
-                  label: Text(key),
-                  onSort: (columnIndex, ascending) {
-                    rows.sort((a, b) => ascending
-                        ? int.parse(a[key]).compareTo(int.parse(b[key]))
-                        : int.parse(b[key]).compareTo(int.parse(a[key])));
-                  },
-                );
-              }).toList(),
-              rows: rows.map((Map<String, dynamic> row) {
-                return DataRow(
-                  cells: keys.map((String key) {
-                    switch (key) {
-                      case "Status":
-                        return DataCell(LevelIcons[row["Status"]]);
-                      case "Time":
-                        return DataCell(
-                          Container(
-                            width: 80.0,
-                            child: Column(
-                              children: [
-                                Text(
-                                  "${DateFormat("E").format(
-                                    row["Time"].toLocal(),
-                                  )}",
-                                ),
-                                Text(
-                                  "${DateFormat("jm").format(
-                                    row["Time"].toLocal(),
-                                  )}",
-                                ),
-                              ],
-                            ),
-                          ),
-                        );
-                      default:
-                        return DataCell(
-                          Text(
-                            row[key].toString(),
-                          ),
-                        );
-                    }
-                  }).toList(),
-                );
-              }).toList(),
-            ),
-          ),
-        ),
-      ),
-    );
   }
 }
 
