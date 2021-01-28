@@ -4,6 +4,7 @@ import 'package:jigowatt/accountListScaffold.dart';
 import 'package:jigowatt/accountScaffold.dart';
 import 'package:jigowatt/dashboardScaffold.dart';
 import 'package:jigowatt/queryListScaffold.dart';
+import 'package:jigowatt/statusContainer.dart';
 import 'package:jigowatt/taskListScaffold.dart';
 import 'package:rapido/rapido.dart';
 
@@ -67,6 +68,7 @@ class _MyHomePageState extends State<MyHomePage> {
       "Friendly Name": "name",
       "Flux": "queryString",
       "Display Type": "type",
+      "Lanuage": "language"
     },
     persistenceProvider: SecretsPercistence(),
   );
@@ -115,14 +117,12 @@ class _MyHomePageState extends State<MyHomePage> {
       variables = futures[0];
       fluxVersion = futures[1];
 
-      _mainViewScaffold = QueryListScaffold(
-        activeAccountName: activeAccountName,
+      _mainViewBodyWidget = StatusContainer(
         api: api,
-        influxDBQueries: influxDBQueries,
-        variables: variables,
+        activeAccountName: activeAccountName,
       );
     } catch (e) {
-      _mainViewScaffold = Scaffold(
+      _mainViewBodyWidget = Scaffold(
         body: Padding(
           padding: const EdgeInsets.all(8.0),
           child: Column(
@@ -187,55 +187,79 @@ class _MyHomePageState extends State<MyHomePage> {
       drawer: JigoWattDrawer(
         activeAccountName: activeAccountName,
         notificationSelected: (InfluxDBNotificationRule notificationRule) {
-          setState(() {
-            _mainViewScaffold = NotificationScaffold(
-              key: ObjectKey(notificationRule.id),
-              notificationRule: notificationRule,
-              activeAccountName: activeAccountName,
-              api: api,
-            );
-          });
           Navigator.pop(context);
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (BuildContext conext) {
+              return NotificationScaffold(
+                  notificationRule: notificationRule,
+                  activeAccountName: activeAccountName,
+                  api: api);
+            }),
+          );
         },
         dashboardSelected: (InfluxDBDashboard dashboard) {
-          setState(() {
-            _mainViewScaffold = DashboardScaffold(
-              key: ObjectKey(dashboard.id),
-              dashboard: dashboard,
-              activeAccountName: activeAccountName,
-              api: api,
-            );
-          });
           Navigator.pop(context);
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (BuildContext context) {
+                return DashboardScaffold(
+                  key: ObjectKey(dashboard.id),
+                  dashboard: dashboard,
+                  activeAccountName: activeAccountName,
+                  api: api,
+                );
+              },
+            ),
+          );
         },
         queriesSelected: () {
-          setState(() {
-            _mainViewScaffold = QueryListScaffold(
-              activeAccountName: activeAccountName,
-              api: api,
-              influxDBQueries: influxDBQueries,
-              variables: variables,
-            );
-          });
           Navigator.pop(context);
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (BuildContext context) {
+                return QueryListScaffold(
+                  activeAccountName: activeAccountName,
+                  api: api,
+                  influxDBQueries: influxDBQueries,
+                  variables: variables,
+                );
+              },
+            ),
+          );
         },
         tasksSelected: (List<InfluxDBTask> tasks) {
-          _mainViewScaffold = TaskListScaffold(
-            api: api,
-            tasks: tasks,
-            activeAccountName: activeAccountName,
-          );
           Navigator.pop(context);
-          setState(() {});
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (BuildContext context) {
+                return TaskListScaffold(
+                  api: api,
+                  tasks: tasks,
+                  activeAccountName: activeAccountName,
+                );
+              },
+            ),
+          );
         },
         bucketsSelected: () {
-          _mainViewScaffold = BucketListScaffold(
-            legacyMode: (fluxVersion.major < 1 && fluxVersion.minor < 100),
-            activeAccountName: activeAccountName,
-            api: api,
-          );
           Navigator.pop(context);
-          setState(() {});
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (BuildContext context) {
+                return BucketListScaffold(
+                  legacyMode:
+                      (fluxVersion.major < 1 && fluxVersion.minor < 100),
+                  activeAccountName: activeAccountName,
+                  api: api,
+                );
+              },
+            ),
+          );
         },
         api: api,
         variables: variables,
@@ -266,7 +290,7 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  Widget _mainViewScaffold;
+  Widget _mainViewBodyWidget;
 
   Widget mainBody() {
     if (accountDocs.documentsLoaded && accountDocs.length == 0) {
@@ -285,7 +309,7 @@ class _MyHomePageState extends State<MyHomePage> {
       );
     }
     if (_accountReadyState == AccountReadyState.Ready) {
-      return _mainViewScaffold;
+      return _mainViewBodyWidget;
     }
     return Container();
   }
