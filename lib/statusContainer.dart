@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flux_mobile/influxDB.dart';
 import 'package:intl/intl.dart';
@@ -18,10 +20,14 @@ class _StatusContainerState extends State<StatusContainer> {
   bool _sortAscending = true;
   int _sortColumn = 0;
   List<String> _extraKeys = [];
+  Timer _timer;
 
   @override
   void initState() {
     _setStatus();
+    _timer = Timer.periodic(Duration(minutes: 1), (timer) { 
+      _setStatus();
+    });
     super.initState();
   }
 
@@ -206,6 +212,12 @@ class _StatusContainerState extends State<StatusContainer> {
       );
     });
     return rows;
+  }
+
+  @override
+  void dispose() {
+    _timer.cancel();
+    super.dispose();
   }
 }
 
