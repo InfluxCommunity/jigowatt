@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flux_mobile/influxDB.dart';
 import 'package:jigowatt/bucketScaffold.dart';
 import 'package:jigowatt/legacyBucketScaffold.dart';
-import 'my_flutter_app_icons.dart';
 
 class BucketListScaffold extends StatefulWidget {
   final InfluxDBAPI api;
