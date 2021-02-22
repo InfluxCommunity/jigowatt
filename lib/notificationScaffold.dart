@@ -50,7 +50,6 @@ class _NotificationScaffoldState extends State<NotificationScaffold> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        leading: Icon(Icons.notifications),
         title: Column(
           children: [
             Text(_notificationRule.name),

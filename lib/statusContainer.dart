@@ -175,7 +175,13 @@ class _StatusContainerState extends State<StatusContainer> {
     List<DataRow> rows = [];
     _statuses.forEach((InfluxDBCheckStatus status) {
       List<DataCell> cells = [];
-      cells.add(DataCell(LevelIcons[status.level]));
+      if(status == null){
+        print("encountered unitialized status");
+      }
+      if(LevelIcons[status.level] == null){
+        cells.add(DataCell(Text("?")));
+      } else {
+      cells.add(DataCell(LevelIcons[status.level]));}
       cells.add(DataCell(
         Container(
           width: 80.0,

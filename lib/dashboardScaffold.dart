@@ -61,7 +61,6 @@ class _DashboardScaffoldState extends State<DashboardScaffold> {
             },
           )
         ],
-        leading: Icon(Icons.dashboard),
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

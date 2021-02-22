@@ -55,7 +55,6 @@ class _BucketListScaffoldState extends State<BucketListScaffold> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        leading: Icon(MyFlutterApp.disks_nav),
         title: Column(
           children: [
             Text("Buckets"),

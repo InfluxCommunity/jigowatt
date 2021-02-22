@@ -26,7 +26,6 @@ class _QueryListScaffoldState extends State<QueryListScaffold> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        leading: Icon(Icons.code),
         title: Text("Queries"),
       ),
       body: QueryListView(

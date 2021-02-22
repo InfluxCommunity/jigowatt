@@ -30,7 +30,6 @@ class _TaskListScaffoldState extends State<TaskListScaffold> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        leading: Icon(Icons.work),
         title: Column(
           children: [
             Text("Tasks"),
