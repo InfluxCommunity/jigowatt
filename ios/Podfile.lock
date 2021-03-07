@@ -59,11 +59,11 @@ SPEC CHECKSUMS:
   google_maps_flutter: c7f9c73576de1fbe152a227bfd6e6c4ae8088619
   GoogleMaps: 4b5346bddfe6911bb89155d43c903020170523ac
   image_picker: 9c3312491f862b28d21ecd8fdf0ee14e601b3f09
-  integration_test: 5ed24a436eb7ec17b6a13046e9bf7ca4a404e59e
+  integration_test: 6eb66a19f7104200dcfdd62bc0077e1b09686e4f
   location: 3a2eed4dd2fab25e7b7baf2a9efefe82b512d740
   path_provider: abfe2b5c733d04e238b0d8691db0cfd63a27a93c
   permission_handler: eac8e15b4a1a3fba55b761d19f3f4e6b005d15b6
 
 PODFILE CHECKSUM: aafe91acc616949ddb318b77800a7f51bffa2a4c
 
-COCOAPODS: 1.9.3
+COCOAPODS: 1.10.1
